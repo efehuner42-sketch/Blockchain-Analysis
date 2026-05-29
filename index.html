@@ -1,11 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Blokzincir İşlem Ağlarının Analizi</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
 </head>
 <body>
-    
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2>Kontrol Paneli</h2>
+            
+            <div class="control-group">
+                <label for="wallet-search">Cüzdan Seçimi (BFS/DFS İçin)</label>
+                <select id="wallet-search">
+                    <option value="">Bir cüzdan seçin...</option>
+                </select>   
+                <button id="btn-bfs">BFS ile Akış İzle</button>
+                <button id="btn-dfs">DFS ile Derinlemesine Analiz</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Sistem Filtreleri</h3>
+                <label for="min-transfer">Minimum Transfer Miktarı</label>
+                <input type="number" id="min-transfer" value="0">
+            </div>
+
+            <div class="info-box" id="node-info">
+                <h3>Öğe Detayları</h3>
+                <p>Graf üzerinde bir düğüme (cüzdan) veya kenara (transfer) tıklayarak detayları görebilirsiniz.</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="cy"></div>
+            
+            <div class="graph-controls">
+                <button id="btn-zoom-in" title="Yakınlaştır">+</button>
+                <button id="btn-zoom-out" title="Uzaklaştır">-</button>
+                <button id="btn-fit" title="Merkeze Odaklan">⌂</button>
+            </div>
+        </main>
+
+        <aside class="merkle-panel">
+            <h2>Merkle Ağacı Görselleştirmesi</h2>
+            <p class="section-desc">Seçilen transfer işlemine ait bütünlük doğrulaması:</p>
+            <div id="merkle-tree-viewer">
+                <div class="placeholder-text">Lütfen graf üzerinden bir transfer işlemi (çizgi) seçin.</div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
