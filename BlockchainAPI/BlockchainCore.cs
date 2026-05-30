@@ -27,18 +27,25 @@ namespace BlockchainCore
             ((WalletNode)Wallets[fromAddress]).OutgoingTransactions.Add(newTx);
         }
 
-        public void BFS_TrackFundFlow(string startAddress)
+        // 3. BFS (Sığ Öncelikli Arama)
+        public List<string> BFS_TrackFundFlow(string startAddress)
         {
-            if (!Wallets.ContainsKey(startAddress)) return;
-            Console.WriteLine($"\n--- BFS Başlatılıyor: {startAddress} ---");
+            List<string> rotam = new List<string>();
+            if (!Wallets.ContainsKey(startAddress)) return rotam;
+
+            Console.WriteLine($"\n--- BFS ile Fon Akışı Başlatılıyor: {startAddress} ---");
             Queue<string> queue = new Queue<string>();
             HashSet<string> visited = new HashSet<string>();
+
             queue.Enqueue(startAddress);
             visited.Add(startAddress);
 
             while (queue.Count > 0)
             {
                 string currentAddress = queue.Dequeue();
+                rotam.Add(currentAddress); // Cüzdan listeye ekleniyor
+
+                // HATA BURADAYDI: (WalletNode) dönüşümü (casting) eklendi
                 WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                 foreach (var tx in currentNode.OutgoingTransactions)
@@ -51,14 +58,19 @@ namespace BlockchainCore
                     }
                 }
             }
+            return rotam;
         }
 
-        public void DFS_DeepAnalysis(string startAddress)
+        // 4. DFS (Derin Öncelikli Arama)
+        public List<string> DFS_DeepAnalysis(string startAddress)
         {
-            if (!Wallets.ContainsKey(startAddress)) return;
-            Console.WriteLine($"\n--- DFS Başlatılıyor: {startAddress} ---");
+            List<string> rotam = new List<string>();
+            if (!Wallets.ContainsKey(startAddress)) return rotam;
+
+            Console.WriteLine($"\n--- DFS ile Derinlemesine Analiz Başlatılıyor: {startAddress} ---");
             Stack<string> stack = new Stack<string>();
             HashSet<string> visited = new HashSet<string>();
+
             stack.Push(startAddress);
 
             while (stack.Count > 0)
@@ -67,11 +79,14 @@ namespace BlockchainCore
                 if (!visited.Contains(currentAddress))
                 {
                     visited.Add(currentAddress);
+                    rotam.Add(currentAddress); // Cüzdan listeye ekleniyor
+
+                    // HATA BURADAYDI: (WalletNode) dönüşümü (casting) eklendi
                     WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                     foreach (var tx in currentNode.OutgoingTransactions)
                     {
-                        Console.WriteLine($"Derin Analiz: {currentAddress} -> {tx.ToAddress}");
+                        Console.WriteLine($"Derin Analiz: {currentAddress} -> {tx.ToAddress} ({tx.Amount})");
                         if (!visited.Contains(tx.ToAddress))
                         {
                             stack.Push(tx.ToAddress);
@@ -79,6 +94,7 @@ namespace BlockchainCore
                     }
                 }
             }
+            return rotam;
         }
     }
 

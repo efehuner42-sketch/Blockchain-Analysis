@@ -96,13 +96,14 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // Konsol çıktısını tetikler
-            _graph.BFS_TrackFundFlow(walletId);
+            // BlockchainGraph sınıfından güncellediğimiz List<string> tipindeki rotayı alıyoruz.
+            List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId);
 
-            // Analiz sonucunu frontend paneline bildirim olarak dönüyoruz
+            // Berke'nin arayüzde animasyon yapabilmesi için rotayı 'path' dizisi olarak dönüyoruz.
             return Ok(new
             {
-                message = $"BFS Algoritması {walletId} için başarıyla çalıştırıldı. Fon akış izleme logları backend konsoluna yazdırıldı."
+                message = $"BFS Algoritması {walletId} için başarıyla çalıştırıldı. Fon akış izleme logları backend konsoluna yazdırıldı.",
+                path = traversalPath
             });
         }
 
@@ -115,12 +116,13 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // Konsol çıktısını tetikler
-            _graph.DFS_DeepAnalysis(walletId);
+            // BlockchainGraph sınıfından güncellediğimiz List<string> tipindeki rotayı alıyoruz.
+            List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId);
 
             return Ok(new
             {
-                message = $"DFS Derin Analiz Algoritması {walletId} için tetiklendi. Detaylar backend konsolunda listeleniyor."
+                message = $"DFS Derin Analiz Algoritması {walletId} için tetiklendi. Detaylar backend konsolunda listeleniyor.",
+                path = traversalPath
             });
         }
 
