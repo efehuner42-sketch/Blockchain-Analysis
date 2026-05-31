@@ -27,16 +27,17 @@ namespace BlockchainCore
             ((WalletNode)Wallets[fromAddress]).OutgoingTransactions.Add(newTx);
         }
 
-        // Efe'nin kodu korundu, sadece arayüz için List<string> dönüşü eklendi
+        // 3. BFS (Sığ Öncelikli Arama - Frontend'e Liste Döner)
         public List<string> BFS_TrackFundFlow(string startAddress)
         {
-            List<string> rotam = new List<string>(); // Kurye listemiz
+            List<string> rotam = new List<string>(); // Arayüz için kurye listemiz
 
             if (!Wallets.ContainsKey(startAddress)) return rotam;
-            
-            Console.WriteLine($"\n--- BFS Başlatılıyor: {startAddress} ---");
+
+            Console.WriteLine($"\n--- BFS ile Fon Akışı Başlatılıyor: {startAddress} ---");
             Queue<string> queue = new Queue<string>();
             HashSet<string> visited = new HashSet<string>();
+
             queue.Enqueue(startAddress);
             visited.Add(startAddress);
 
@@ -61,16 +62,17 @@ namespace BlockchainCore
             return rotam; // Listeyi frontend'e yolla
         }
 
-        // Efe'nin kodu korundu, sadece arayüz için List<string> dönüşü eklendi
+        // 4. DFS (Derin Öncelikli Arama - Frontend'e Liste Döner)
         public List<string> DFS_DeepAnalysis(string startAddress)
         {
-            List<string> rotam = new List<string>(); // Kurye listemiz
+            List<string> rotam = new List<string>(); // Arayüz için kurye listemiz
 
             if (!Wallets.ContainsKey(startAddress)) return rotam;
-            
-            Console.WriteLine($"\n--- DFS Başlatılıyor: {startAddress} ---");
+
+            Console.WriteLine($"\n--- DFS ile Derinlemesine Analiz Başlatılıyor: {startAddress} ---");
             Stack<string> stack = new Stack<string>();
             HashSet<string> visited = new HashSet<string>();
+
             stack.Push(startAddress);
 
             while (stack.Count > 0)
@@ -85,7 +87,7 @@ namespace BlockchainCore
 
                     foreach (var tx in currentNode.OutgoingTransactions)
                     {
-                        Console.WriteLine($"Derin Analiz: {currentAddress} -> {tx.ToAddress}");
+                        Console.WriteLine($"Derin Analiz: {currentAddress} -> {tx.ToAddress} ({tx.Amount})");
                         if (!visited.Contains(tx.ToAddress))
                         {
                             stack.Push(tx.ToAddress);

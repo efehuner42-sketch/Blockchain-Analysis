@@ -52,7 +52,7 @@ namespace BlockchainAPI.Controllers
                         : walletNode.WalletAddress.Replace("Cuzdan_", "") + " Cüzdanı";
 
                     // Cytoscape kütüphanesinin zorunlu kıldığı 'data' sarmalayıcısı eklendi
-                    // Bakiye (10 BTC) doğrudan ekranda görünecek şekilde label içine gömüldü
+                    // Bakiye doğrudan ekranda görünecek şekilde label içine gömüldü
                     nodesList.Add(new
                     {
                         data = new
@@ -96,7 +96,7 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // Algoritma çalışıyor ve cüzdanların rotasını bir listeye atıyor
+            // BlockchainGraph sınıfından rotayı alıyoruz. (Berke'nin animasyon yapabilmesi için)
             List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId);
 
             // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
@@ -116,7 +116,7 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // Algoritma çalışıyor ve cüzdanların rotasını bir listeye atıyor
+            // BlockchainGraph sınıfından derin analiz rotasını alıyoruz.
             List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId);
 
             // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
