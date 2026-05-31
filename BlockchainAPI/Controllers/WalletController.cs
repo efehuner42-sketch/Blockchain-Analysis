@@ -96,13 +96,14 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // Konsol çıktısını tetikler
-            _graph.BFS_TrackFundFlow(walletId);
+            // Algoritma çalışıyor ve cüzdanların rotasını bir listeye atıyor
+            List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId);
 
-            // Analiz sonucunu frontend paneline bildirim olarak dönüyoruz
+            // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
             return Ok(new
             {
-                message = $"BFS Algoritması {walletId} için başarıyla çalıştırıldı. Fon akış izleme logları backend konsoluna yazdırıldı."
+                message = $"BFS Algoritması {walletId} için başarıyla çalıştırıldı. Fon akış izleme logları backend konsoluna yazdırıldı.",
+                path = traversalPath
             });
         }
 
@@ -115,17 +116,19 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // Konsol çıktısını tetikler
-            _graph.DFS_DeepAnalysis(walletId);
+            // Algoritma çalışıyor ve cüzdanların rotasını bir listeye atıyor
+            List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId);
 
+            // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
             return Ok(new
             {
-                message = $"DFS Derin Analiz Algoritması {walletId} için tetiklendi. Detaylar backend konsolunda listeleniyor."
+                message = $"DFS Derin Analiz Algoritması {walletId} için tetiklendi. Detaylar backend konsolunda listeleniyor.",
+                path = traversalPath
             });
         }
 
         // GET: api/wallet/merkle/{txId}
-        // Berke arayüzde bir transfer çizgisine tıkladığında Merkle bütünlük kanıtını hesaplayan fonksiyon
+        // Arayüzde bir transfer çizgisine tıkladığında Merkle bütünlük kanıtını hesaplayan fonksiyon
         [HttpGet("merkle/{txId}")]
         public IActionResult GetMerkleProof(string txId)
         {

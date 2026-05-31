@@ -1,4 +1,4 @@
-// Sunucu kapalıyken patlamamak için fallback datası
+// Sunucu kapalıyken patlamamak için fallback (mock) datası
 const mockBlockchainData = {
     nodes: [
         { id: 'Cuzdan_Efe', label: 'Efe Cüzdanı', balance: 100 },
@@ -14,228 +14,277 @@ const mockBlockchainData = {
     ]
 };
 
-// API'den güncel graf datasını fetchle
+const cyStyles = [
+    {
+        selector: 'node',
+        style: {
+            'background-color': '#27272a',
+            'label': 'data(label)',
+            'width': '40px',
+            'height': '40px',
+            'color': '#fafafa',
+            'font-size': '10px',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'border-width': 1,
+            'border-color': '#52525b'
+        }
+    },
+    {
+        selector: 'edge',
+        style: {
+            'width': 2,
+            'line-color': '#3f3f46',
+            'target-arrow-color': '#3f3f46',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'label': 'data(amount)',
+            'font-size': '9px',
+            'color': '#a1a1aa',
+            'text-margin-y': -10
+        }
+    },
+    {
+        selector: 'node:selected',
+        style: {
+            'border-color': '#fafafa',
+            'background-color': '#18181b',
+            'border-width': 2
+        }
+    },
+    {
+        selector: 'edge:selected',
+        style: {
+            'line-color': '#fafafa',
+            'target-arrow-color': '#fafafa'
+        }
+    },
+    {
+        selector: '.highlighted',
+        style: {
+            'background-color': '#10b981', 
+            'line-color': '#10b981',
+            'target-arrow-color': '#10b981',
+            'transition-property': 'background-color, line-color, target-arrow-color, border-color',
+            'transition-duration': '0.4s',
+            'border-color': '#059669',
+            'border-width': 2
+        }
+    }
+];
+
 async function getBlockchainData() {
     try {
         const response = await fetch('http://localhost:5008/api/wallet');
-        
         if (response.ok) {
-            const gercekVeri = await response.json();
-            console.log("DB'den veri çekildi:", gercekVeri);
-            
-            // TODO: Backend'e edge'ler (transferler) eklenince mock yerine gercekVeri'yi return et
-            return mockBlockchainData; 
+            return await response.json();
         } else {
-            throw new Error("API patladı.");
+            throw new Error("API yanıt vermedi.");
         }
     } catch (error) {
-        console.warn("Backend (5008) ayakta değil. Mock data ile devam ediliyor.");
+        console.warn("Backend kapalı, Mock Data devrede.");
         return mockBlockchainData;
     }
 }
 
-// Cytoscape ve UI'ı ayağa kaldıran main fonksiyon
+// TERMINAL YAZDIRMA FONKSİYONU
+function writeToTerminal(message, type = 'info') {
+    const term = document.getElementById('ui-terminal');
+    if(term) {
+        term.innerHTML += `<div class="log-${type}">${message}</div>`;
+        term.scrollTop = term.scrollHeight; // Otomatik en aşağı kaydır
+    }
+}
+
 async function initSystem() {
     const data = await getBlockchainData();
-    const cyElements = [];
+    const cyElements = [...data.nodes, ...data.edges];
 
-    // Nodeların boyutunu bakiyeye göre dinamik ayarla
-    data.nodes.forEach(node => {
-        const calculatedSize = Math.max(30, Math.min(80, node.balance / 2));
-        cyElements.push({
-            group: 'nodes',
-            data: { 
-                id: node.id, 
-                label: `${node.label}\n(${node.balance} BTC)`,
-                size: calculatedSize,
-                balance: node.balance
-            }
-        });
-    });
-
-    // Edgelere (Transferler) miktara göre kalınlık ver
-    data.edges.forEach(edge => {
-        const calculatedWidth = Math.max(2, Math.min(10, edge.amount / 10));
-        cyElements.push({
-            group: 'edges',
-            data: {
-                id: edge.id,
-                source: edge.source,
-                target: edge.target,
-                amount: edge.amount,
-                time: edge.time,
-                width: calculatedWidth
-            }
-        });
-    });
-
-    // Graf config ve render
     const cy = cytoscape({
         container: document.getElementById('cy'),
         elements: cyElements,
-        userZoomingEnabled: false, // Scroll zoom iptal (kaybolmayı önlemek için)
-        style: [
-            {
-                selector: 'node',
-                style: {
-                    'background-color': '#27272a',
-                    'label': 'data(label)',
-                    'width': 'data(size)',
-                    'height': 'data(size)',
-                    'color': '#fafafa',
-                    'font-size': '10px',
-                    'text-valign': 'center',
-                    'text-halign': 'center',
-                    'text-wrap': 'wrap',
-                    'border-width': 1,
-                    'border-color': '#52525b'
-                }
-            },
-            {
-                selector: 'edge',
-                style: {
-                    'width': 'data(width)',
-                    'line-color': '#3f3f46',
-                    'target-arrow-color': '#3f3f46',
-                    'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier',
-                    'label': 'data(amount)',
-                    'font-size': '9px',
-                    'color': '#a1a1aa',
-                    'text-margin-y': -10
-                }
-            },
-            {
-                selector: 'node:selected',
-                style: {
-                    'border-color': '#fafafa',
-                    'background-color': '#18181b',
-                    'border-width': 2
-                }
-            },
-            {
-                selector: 'edge:selected',
-                style: {
-                    'line-color': '#fafafa',
-                    'target-arrow-color': '#fafafa'
-                }
-            }
-        ],
+        userZoomingEnabled: false, 
+        style: cyStyles,
         layout: { name: 'cose', padding: 50 }
     });
 
-    // --- EVENT LISTENERS ---
+    const walletSelect = document.getElementById('wallet-search');
+    const infoBox = document.getElementById('node-info');
+    const merkleViewer = document.getElementById('merkle-tree-viewer');
+    const minTransferInput = document.getElementById('min-transfer');
 
-    // Cüzdana tıklanınca
+    walletSelect.innerHTML = '<option value="">Bir cüzdan seçin...</option>'; 
+    data.nodes.forEach(nodeItem => {
+        let option = document.createElement('option');
+        const nodeData = nodeItem.data || nodeItem; 
+        option.value = nodeData.id;
+        option.text = nodeData.label.replace('\n', ' ');
+        walletSelect.appendChild(option);
+    });
+
     cy.on('tap', 'node', function(evt){
         const node = evt.target;
-        
-        // Select box'ı senkronize et
-        document.getElementById('wallet-search').value = node.id();
+        walletSelect.value = node.id();
 
-        document.getElementById('node-info').innerHTML = `
+        infoBox.innerHTML = `
             <h3>Cüzdan Detayı</h3>
             <p><strong>ID:</strong> ${node.id()}</p>
             <p><strong>Bakiye:</strong> ${node.data('balance')} BTC</p>
         `;
-
-        document.getElementById('merkle-tree-viewer').innerHTML = `
-            <div class="placeholder-text">Lütfen graf üzerinden bir transfer işlemi (çizgi) seçin.</div>
-        `;
+        merkleViewer.innerHTML = `<div class="placeholder-text">Lütfen graf üzerinden bir transfer işlemi seçin.</div>`;
     });
 
-    // Transfer okuna tıklanınca
-    cy.on('tap', 'edge', function(evt){
+    cy.on('tap', 'edge', async function(evt){
         const edge = evt.target;
-        
-        document.getElementById('node-info').innerHTML = `
+        infoBox.innerHTML = `
             <h3>Transfer Detayı</h3>
             <p><strong>İşlem ID:</strong> ${edge.id()}</p>
             <p><strong>Kaynak:</strong> ${edge.data('source')}</p>
             <p><strong>Hedef:</strong> ${edge.data('target')}</p>
             <p><strong>Miktar:</strong> ${edge.data('amount')} BTC</p>
-            <p><strong>Zaman:</strong> ${edge.data('time')}</p>
         `;
 
-        // Merkle UI update
-        document.getElementById('merkle-tree-viewer').innerHTML = `
-            <div class="merkle-node merkle-root">Merkle Root<br>[Hash: 8a9f...2e]</div>
-            <div style="text-align:center; color:#52525b;">↑</div>
-            <div class="merkle-node">İç Düğüm (Hash L1)</div>
-            <div style="text-align:center; color:#52525b;">↑</div>
-            <div class="merkle-node" style="background:#18181b; border-color:#fafafa; color:#fafafa;">
-                <strong>Seçili TX Yaprağı</strong><br>${edge.id()} Hash
-            </div>
-        `;
+        merkleViewer.innerHTML = `<div class="placeholder-text">Merkle kanıtı backend'den çekiliyor...</div>`;
+
+        try {
+            const response = await fetch(`http://localhost:5008/api/wallet/merkle/${edge.id()}`);
+            if (response.ok) {
+                const merkleData = await response.json();
+                const root = merkleData.root || merkleData.Root;
+                const verified = merkleData.verified !== undefined ? merkleData.verified : merkleData.Verified;
+                const selectedTx = merkleData.selectedTx || merkleData.SelectedTx;
+
+                merkleViewer.innerHTML = `
+                    <div class="merkle-node merkle-root">Merkle Root<br>[Hash: ${root.substring(0, 15)}...]</div>
+                    <div style="text-align:center; color:#52525b;">↑</div>
+                    <div class="merkle-node">Durum: ${verified ? 'Onaylandı ✅' : 'Reddedildi ❌'}</div>
+                    <div style="text-align:center; color:#52525b;">↑</div>
+                    <div class="merkle-node" style="background:#18181b; border-color:#fafafa; color:#fafafa;">
+                        <strong>Seçili TX Yaprağı</strong><br>${selectedTx}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            merkleViewer.innerHTML = `<div class="placeholder-text" style="color: #ef4444;">Backend kapalı, Mock Modu.</div>`;
+        }
     });
 
-    // Boşluğa tıklayınca seçimleri sıfırla
     cy.on('tap', function(evt){
         if(evt.target === cy) { 
             cy.elements().unselect(); 
-            document.getElementById('wallet-search').value = "";
+            walletSelect.value = "";
+        }
+    });
+
+    minTransferInput.addEventListener('input', (e) => {
+        const minAmount = parseFloat(e.target.value) || 0;
+        cy.edges().forEach(edge => {
+            if (parseFloat(edge.data('amount')) < minAmount) {
+                edge.style('display', 'none');
+            } else {
+                edge.style('display', 'element');
+            }
+        });
+        writeToTerminal(`[FİLTRE DEĞİŞTİ] Minimum Limit: ${minAmount} BTC`, 'warning');
+    });
+
+    // --- KAMERA ---
+    document.getElementById('btn-zoom-in').addEventListener('click', () => cy.zoom({ level: cy.zoom() * 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } }));
+    document.getElementById('btn-zoom-out').addEventListener('click', () => cy.zoom({ level: cy.zoom() * 0.8, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } }));
+    document.getElementById('btn-fit').addEventListener('click', () => cy.fit(cy.elements(), 50));
+
+    // --- ANİMASYON VE YENİ TERMİNAL MANTIĞI ---
+    async function animatePath(pathArray, algoName) {
+        writeToTerminal(`--- ${algoName} Başlatılıyor: ${pathArray[0]} ---`, 'info');
+        
+        cy.elements().removeClass('highlighted');
+        cy.animate({ fit: { eles: cy.elements(), padding: 50 } }, { duration: 500 });
+        await new Promise(resolve => setTimeout(resolve, 600)); 
+        
+        let visitedNodes = []; 
+
+        for (let i = 0; i < pathArray.length; i++) {
+            const currentWalletId = pathArray[i];
+            const node = cy.getElementById(currentWalletId);
             
-            document.getElementById('node-info').innerHTML = `
-                <h3>Öğe Detayları</h3>
-                <p>Graf üzerinde bir düğüme (cüzdan) veya kenara (transfer) tıklayarak detayları görebilirsiniz.</p>
-            `;
-            document.getElementById('merkle-tree-viewer').innerHTML = `
-                <div class="placeholder-text">Lütfen graf üzerinden bir transfer işlemi (çizgi) seçin.</div>
-            `;
+            if (i === 0) {
+                if (node.length > 0) node.addClass('highlighted');
+                visitedNodes.push(currentWalletId);
+                continue;
+            }
+
+            let hasVisibleEdge = false;
+            let edgesToHighlight = [];
+
+            for (let j = 0; j < visitedNodes.length; j++) {
+                const prevNodeId = visitedNodes[j];
+                const prevNode = cy.getElementById(prevNodeId);
+                
+                if (prevNode.length > 0 && node.length > 0) {
+                    const edgesBetween = prevNode.edgesTo(node);
+                    
+                    edgesBetween.forEach(edge => {
+                        const miktar = edge.data('amount');
+                        if (edge.style('display') !== 'none') {
+                            hasVisibleEdge = true;
+                            edgesToHighlight.push({ edgeObj: edge, prev: prevNodeId, amt: miktar });
+                        } else {
+                            // FİLTREYE TAKILANLARI TERMİNALE YAZDIR (KIRMIZI)
+                            writeToTerminal(`[BLOKE] ${prevNodeId} -> ${currentWalletId} (${miktar} BTC) (Filtreye takıldı)`, 'error');
+                        }
+                    });
+                }
+            }
+
+            if (hasVisibleEdge) {
+                if (node.length > 0) node.addClass('highlighted');
+                edgesToHighlight.forEach(item => {
+                    item.edgeObj.addClass('highlighted');
+                    // GEÇERLİ TRANSFERLERİ TERMİNALE YAZDIR (YEŞİL)
+                    writeToTerminal(`${item.prev} -> ${currentWalletId} (${item.amt} BTC)`, 'success');
+                });
+                
+                visitedNodes.push(currentWalletId);
+                await new Promise(resolve => setTimeout(resolve, 600)); 
+            }
         }
-    });
+        writeToTerminal(`> ${algoName} analizi tamamlandı.`, 'info');
+    }
 
-    // Search inputunu node listesiyle doldur
-    const walletSelect = document.getElementById('wallet-search');
-    walletSelect.innerHTML = '<option value="">Bir cüzdan seçin...</option>'; 
-    data.nodes.forEach(node => {
-        let option = document.createElement('option');
-        option.value = node.id;
-        option.text = `${node.id} - ${node.label}`;
-        walletSelect.appendChild(option);
-    });
+    async function runAlgorithm(type) {
+        const searchId = walletSelect.value;
+        const algoName = type === 'bfs' ? 'BFS' : 'DFS';
 
-    // Kamera Kontrolleri
-    document.getElementById('btn-zoom-in').addEventListener('click', () => {
-        cy.zoom({ level: cy.zoom() * 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
-    });
+        if(!searchId) return alert("Lütfen listeden bir cüzdan seçin!");
 
-    document.getElementById('btn-zoom-out').addEventListener('click', () => {
-        cy.zoom({ level: cy.zoom() * 0.8, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
-    });
-
-    document.getElementById('btn-fit').addEventListener('click', () => {
-        cy.fit(cy.elements(), 50); 
-    });
-
-    // BFS Algoritma tetikleyicisi
-    document.getElementById('btn-bfs').addEventListener('click', () => {
-        const searchId = document.getElementById('wallet-search').value;
-
-        if(!searchId) {
-            alert("Lütfen listeden bir cüzdan seçin!");
-            return;
-        }
+        document.getElementById('ui-terminal').innerHTML = ""; // Yeni aramada terminali temizle
 
         const element = cy.getElementById(searchId);
-
         if(element.length > 0 && element.isNode()) {
             cy.elements().unselect();
             element.select(); 
-            cy.animate({ center: { eles: element }, zoom: 1.5 }, { duration: 500 });
-
-            document.getElementById('node-info').innerHTML = `
-                <h3>Cüzdan Detayı</h3>
-                <p><strong>ID:</strong> ${element.id()}</p>
-                <p><strong>Bakiye:</strong> ${element.data('balance')} BTC</p>
-                <p style="color: #a1a1aa; margin-top: 5px;"><em>[BFS Analizi İçin Başlangıç Noktası Seçildi]</em></p>
-            `;
+            
+            try {
+                const response = await fetch(`http://localhost:5008/api/wallet/${type}/${searchId}`);
+                if (response.ok) {
+                    const resData = await response.json();
+                    const algoritmaRotasi = resData.path || resData.Path;
+                    
+                    if (algoritmaRotasi && algoritmaRotasi.length > 0) {
+                        await animatePath(algoritmaRotasi, algoName);
+                    }
+                }
+            } catch (error) {
+                writeToTerminal(`Backend çevrimdışı. Sistem içi (Mock) test başlatılıyor...`, 'warning');
+                const mockPath = [searchId, 'Cuzdan_Murat', 'Cuzdan_Borsa_Binance']; 
+                await animatePath(mockPath, algoName);
+            }
         }
-    });
+    }
 
-    document.getElementById('btn-dfs').addEventListener('click', () => {
-        document.getElementById('btn-bfs').click();
-    });
+    document.getElementById('btn-bfs').addEventListener('click', () => runAlgorithm('bfs'));
+    document.getElementById('btn-dfs').addEventListener('click', () => runAlgorithm('dfs'));
 }
 
 initSystem();

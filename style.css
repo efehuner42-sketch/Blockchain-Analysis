@@ -192,3 +192,23 @@ button:hover {
     border-color: #52525b;
     color: #fafafa;
 }
+
+/* --- YENİ EKLENEN SİSTEM TERMİNALİ TASARIMI --- */
+.ui-terminal {
+    background-color: #000000;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    height: 180px;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ui-terminal .log-info { color: #a1a1aa; }
+.ui-terminal .log-success { color: #10b981; }
+.ui-terminal .log-warning { color: #f59e0b; }
+.ui-terminal .log-error { color: #ef4444; }

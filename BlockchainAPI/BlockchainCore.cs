@@ -27,9 +27,13 @@ namespace BlockchainCore
             ((WalletNode)Wallets[fromAddress]).OutgoingTransactions.Add(newTx);
         }
 
-        public void BFS_TrackFundFlow(string startAddress)
+        // Efe'nin kodu korundu, sadece arayüz için List<string> dönüşü eklendi
+        public List<string> BFS_TrackFundFlow(string startAddress)
         {
-            if (!Wallets.ContainsKey(startAddress)) return;
+            List<string> rotam = new List<string>(); // Kurye listemiz
+
+            if (!Wallets.ContainsKey(startAddress)) return rotam;
+            
             Console.WriteLine($"\n--- BFS Başlatılıyor: {startAddress} ---");
             Queue<string> queue = new Queue<string>();
             HashSet<string> visited = new HashSet<string>();
@@ -39,6 +43,8 @@ namespace BlockchainCore
             while (queue.Count > 0)
             {
                 string currentAddress = queue.Dequeue();
+                rotam.Add(currentAddress); // Geçilen cüzdanı arayüz listesine ekle
+
                 WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                 foreach (var tx in currentNode.OutgoingTransactions)
@@ -51,11 +57,17 @@ namespace BlockchainCore
                     }
                 }
             }
+
+            return rotam; // Listeyi frontend'e yolla
         }
 
-        public void DFS_DeepAnalysis(string startAddress)
+        // Efe'nin kodu korundu, sadece arayüz için List<string> dönüşü eklendi
+        public List<string> DFS_DeepAnalysis(string startAddress)
         {
-            if (!Wallets.ContainsKey(startAddress)) return;
+            List<string> rotam = new List<string>(); // Kurye listemiz
+
+            if (!Wallets.ContainsKey(startAddress)) return rotam;
+            
             Console.WriteLine($"\n--- DFS Başlatılıyor: {startAddress} ---");
             Stack<string> stack = new Stack<string>();
             HashSet<string> visited = new HashSet<string>();
@@ -67,6 +79,8 @@ namespace BlockchainCore
                 if (!visited.Contains(currentAddress))
                 {
                     visited.Add(currentAddress);
+                    rotam.Add(currentAddress); // Geçilen cüzdanı arayüz listesine ekle
+
                     WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                     foreach (var tx in currentNode.OutgoingTransactions)
@@ -79,6 +93,8 @@ namespace BlockchainCore
                     }
                 }
             }
+
+            return rotam; // Listeyi frontend'e yolla
         }
     }
 
