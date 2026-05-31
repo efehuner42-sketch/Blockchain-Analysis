@@ -7,6 +7,8 @@ services:
       context: ./BlockchainAPI
       dockerfile: Dockerfile
     container_name: csharp_blockchain_api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
     ports:
       - "5008:8080"
     networks:
