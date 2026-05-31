@@ -27,10 +27,11 @@ namespace BlockchainCore
             ((WalletNode)Wallets[fromAddress]).OutgoingTransactions.Add(newTx);
         }
 
-        // 3. BFS (Sığ Öncelikli Arama)
+        // 3. BFS (Sığ Öncelikli Arama - Frontend'e Liste Döner)
         public List<string> BFS_TrackFundFlow(string startAddress)
         {
-            List<string> rotam = new List<string>();
+            List<string> rotam = new List<string>(); // Arayüz için kurye listemiz
+
             if (!Wallets.ContainsKey(startAddress)) return rotam;
 
             Console.WriteLine($"\n--- BFS ile Fon Akışı Başlatılıyor: {startAddress} ---");
@@ -43,9 +44,8 @@ namespace BlockchainCore
             while (queue.Count > 0)
             {
                 string currentAddress = queue.Dequeue();
-                rotam.Add(currentAddress); // Cüzdan listeye ekleniyor
+                rotam.Add(currentAddress); // Geçilen cüzdanı arayüz listesine ekle
 
-                // HATA BURADAYDI: (WalletNode) dönüşümü (casting) eklendi
                 WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                 foreach (var tx in currentNode.OutgoingTransactions)
@@ -58,13 +58,15 @@ namespace BlockchainCore
                     }
                 }
             }
-            return rotam;
+
+            return rotam; // Listeyi frontend'e yolla
         }
 
-        // 4. DFS (Derin Öncelikli Arama)
+        // 4. DFS (Derin Öncelikli Arama - Frontend'e Liste Döner)
         public List<string> DFS_DeepAnalysis(string startAddress)
         {
-            List<string> rotam = new List<string>();
+            List<string> rotam = new List<string>(); // Arayüz için kurye listemiz
+
             if (!Wallets.ContainsKey(startAddress)) return rotam;
 
             Console.WriteLine($"\n--- DFS ile Derinlemesine Analiz Başlatılıyor: {startAddress} ---");
@@ -79,9 +81,8 @@ namespace BlockchainCore
                 if (!visited.Contains(currentAddress))
                 {
                     visited.Add(currentAddress);
-                    rotam.Add(currentAddress); // Cüzdan listeye ekleniyor
+                    rotam.Add(currentAddress); // Geçilen cüzdanı arayüz listesine ekle
 
-                    // HATA BURADAYDI: (WalletNode) dönüşümü (casting) eklendi
                     WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                     foreach (var tx in currentNode.OutgoingTransactions)
@@ -94,7 +95,8 @@ namespace BlockchainCore
                     }
                 }
             }
-            return rotam;
+
+            return rotam; // Listeyi frontend'e yolla
         }
     }
 

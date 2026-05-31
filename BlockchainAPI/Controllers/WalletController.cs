@@ -52,7 +52,7 @@ namespace BlockchainAPI.Controllers
                         : walletNode.WalletAddress.Replace("Cuzdan_", "") + " Cüzdanı";
 
                     // Cytoscape kütüphanesinin zorunlu kıldığı 'data' sarmalayıcısı eklendi
-                    // Bakiye (10 BTC) doğrudan ekranda görünecek şekilde label içine gömüldü
+                    // Bakiye doğrudan ekranda görünecek şekilde label içine gömüldü
                     nodesList.Add(new
                     {
                         data = new
@@ -96,10 +96,10 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // BlockchainGraph sınıfından güncellediğimiz List<string> tipindeki rotayı alıyoruz.
+            // BlockchainGraph sınıfından rotayı alıyoruz. (Berke'nin animasyon yapabilmesi için)
             List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId);
 
-            // Berke'nin arayüzde animasyon yapabilmesi için rotayı 'path' dizisi olarak dönüyoruz.
+            // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
             return Ok(new
             {
                 message = $"BFS Algoritması {walletId} için başarıyla çalıştırıldı. Fon akış izleme logları backend konsoluna yazdırıldı.",
@@ -116,9 +116,10 @@ namespace BlockchainAPI.Controllers
                 return NotFound(new { message = "Cüzdan bulunamadı." });
             }
 
-            // BlockchainGraph sınıfından güncellediğimiz List<string> tipindeki rotayı alıyoruz.
+            // BlockchainGraph sınıfından derin analiz rotasını alıyoruz.
             List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId);
 
+            // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
             return Ok(new
             {
                 message = $"DFS Derin Analiz Algoritması {walletId} için tetiklendi. Detaylar backend konsolunda listeleniyor.",
@@ -127,7 +128,7 @@ namespace BlockchainAPI.Controllers
         }
 
         // GET: api/wallet/merkle/{txId}
-        // Berke arayüzde bir transfer çizgisine tıkladığında Merkle bütünlük kanıtını hesaplayan fonksiyon
+        // Arayüzde bir transfer çizgisine tıkladığında Merkle bütünlük kanıtını hesaplayan fonksiyon
         [HttpGet("merkle/{txId}")]
         public IActionResult GetMerkleProof(string txId)
         {
