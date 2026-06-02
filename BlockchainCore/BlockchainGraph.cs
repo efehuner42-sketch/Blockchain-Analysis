@@ -35,9 +35,8 @@ namespace BlockchainCore
         // 3. BFS (Sığ Öncelikli Arama) - Kuyruk (Queue) Mantığı
         public List<string> BFS_TrackFundFlow(string startAddress)
         {
-            List<string> rotam = new List<string>(); // Berke'ye gidecek liste
+            List<string> rotam = new List<string>(); // Arayüz için saf ID listesi
 
-            // Başlangıç cüzdanı sistemde yoksa boş liste dön
             if (!Wallets.ContainsKey(startAddress)) return rotam;
 
             Console.WriteLine($"\n--- BFS ile Fon Akışı Başlatılıyor: {startAddress} ---");
@@ -51,15 +50,14 @@ namespace BlockchainCore
             while (queue.Count > 0)
             {
                 string currentAddress = queue.Dequeue();
+                rotam.Add(currentAddress); // Sadece ID'yi listeye ekle (Animasyon için)
 
-                // Cüzdanı sıradan çeker çekmez listemize ekliyoruz
-                rotam.Add(currentAddress);
-
-                WalletNode currentNode = Wallets[currentAddress];
+                WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
                 foreach (var tx in currentNode.OutgoingTransactions)
                 {
-                    Console.WriteLine($"{currentAddress} -> {tx.ToAddress} ({tx.Amount})");
+                    // Loglar backend terminalinde akmaya devam eder
+                    Console.WriteLine($"{currentAddress} cüzdanından {tx.ToAddress} cüzdanına {tx.Amount} miktarında transfer yapıldı.");
 
                     if (!visited.Contains(tx.ToAddress))
                     {
@@ -68,50 +66,56 @@ namespace BlockchainCore
                     }
                 }
             }
-
-            return rotam; // En son rotayı dışarı fırlatıyoruz
+            return rotam; // Saf ID listesini gönder
         }
 
         // 4. DFS (Derin Öncelikli Arama) - Yığıt (Stack) Mantığı
-        public List<string> DFS_DeepAnalysis(string startAddress)
+        public List<string> DFS_DeepAnalysis(string startAddress, decimal minAmount = 0)
         {
-            List<string> rotam = new List<string>(); // Berke'ye gidecek liste
+            List<string> rotam = new List<string>(); // Arayüz için saf ID listesi
 
-            if (!Wallets.ContainsKey(startAddress)) return rotam;
+            if (!Wallets.ContainsKey(startAddress)) 
+            {
+                Console.WriteLine($"Hata: {startAddress} adresi sistemde bulunamadı.");
+                return rotam;
+            }
 
-            Console.WriteLine($"\n--- DFS ile Derinlemesine Analiz Başlatılıyor: {startAddress} ---");
+            Console.WriteLine($"--- DFS Başlatılıyor: {startAddress} (Min: {minAmount} BTC) ---");
 
             Stack<string> stack = new Stack<string>();
-            HashSet<string> visited = new HashSet<string>();
+            HashSet<string> visitedTransactions = new HashSet<string>();
 
             stack.Push(startAddress);
 
             while (stack.Count > 0)
             {
                 string currentAddress = stack.Pop();
-
-                if (!visited.Contains(currentAddress))
-                {
-                    visited.Add(currentAddress);
-
-                    // Cüzdanı ziyaret ettiğimiz an listemize ekliyoruz
+                
+                // Ziyaret edilen cüzdanı arayüz rotasına ekle (Sadece saf ID)
+                if (!rotam.Contains(currentAddress)) {
                     rotam.Add(currentAddress);
+                }
 
-                    WalletNode currentNode = Wallets[currentAddress];
+                WalletNode currentNode = (WalletNode)Wallets[currentAddress];
 
-                    foreach (var tx in currentNode.OutgoingTransactions)
+                foreach (var tx in currentNode.OutgoingTransactions)
+                {
+                    if (!visitedTransactions.Contains(tx.TransactionId))
                     {
-                        Console.WriteLine($"Derin Analiz: {currentAddress} -> {tx.ToAddress} ({tx.Amount})");
+                        visitedTransactions.Add(tx.TransactionId);
+                        stack.Push(tx.ToAddress);
 
-                        if (!visited.Contains(tx.ToAddress))
+                        // Filtreli log mantığı backend terminalinde çalışır
+                        if (tx.Amount >= minAmount)
                         {
-                            stack.Push(tx.ToAddress);
+                            Console.WriteLine($"{currentAddress} -> {tx.ToAddress} ({tx.Amount} BTC)");
                         }
                     }
                 }
             }
 
-            return rotam; // En son rotayı dışarı fırlatıyoruz
+            Console.WriteLine("> DFS analizi tamamlandı.");
+            return rotam; // Saf ID listesini gönder
         }
     }
 }
