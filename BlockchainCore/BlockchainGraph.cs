@@ -72,46 +72,50 @@ namespace BlockchainCore
         }
 
         // 4. DFS (Derin Öncelikli Arama) - Yığıt (Stack) Mantığı
-        public void DFS_DeepAnalysis(string startAddress)
+        public List<string> DFS_DeepAnalysis(string startAddress, decimal minAmount = 0)
         {
-            // Başlangıç cüzdanı sistemde yoksa işlemi iptal et
-            if (!Wallets.ContainsKey(startAddress)) return;
+            // Berke'nin UI'da göstereceği metinleri tutacağımız liste
+            List<string> logs = new List<string>();
 
-            Console.WriteLine($"\n--- DFS ile Derinlemesine Analiz Başlatılıyor: {startAddress} ---");
+            if (!Wallets.ContainsKey(startAddress)) 
+            {
+                logs.Add($"Hata: {startAddress} adresi sistemde bulunamadı.");
+                return logs;
+            }
 
-            // Bulaşık yığını gibi: En son giren ilk çıkar.
+            logs.Add($"--- DFS Başlatılıyor: {startAddress} (Min: {minAmount} BTC) ---");
+
             Stack<string> stack = new Stack<string>();
-            HashSet<string> visited = new HashSet<string>();
+            HashSet<string> visitedTransactions = new HashSet<string>();
 
-            // Başlangıç cüzdanını yığına ekle
             stack.Push(startAddress);
 
-            // Yığın boşalana kadar çalış
             while (stack.Count > 0)
             {
-                // Yığının en üstündeki (en son eklenen) cüzdanı al
                 string currentAddress = stack.Pop();
+                WalletNode currentNode = Wallets[currentAddress];
 
-                // Eğer bu cüzdana daha önce geldiysek atla
-                if (!visited.Contains(currentAddress))
+                foreach (var tx in currentNode.OutgoingTransactions)
                 {
-                    // Cüzdanı ziyaret edildi olarak işaretle
-                    visited.Add(currentAddress);
-                    WalletNode currentNode = Wallets[currentAddress];
-
-                    // Bu cüzdandan çıkan tüm işlemlere bak
-                    foreach (var tx in currentNode.OutgoingTransactions)
+                    if (!visitedTransactions.Contains(tx.TransactionId))
                     {
-                        Console.WriteLine($"Derin Analiz: {currentAddress} -> {tx.ToAddress} ({tx.Amount})");
-                        
-                        // Gidilecek yeni cüzdanı yığına ekle (böylece bir sonraki adımda hemen ona geçilecek)
-                        if (!visited.Contains(tx.ToAddress))
+                        // İşlemi ziyaret edildi olarak işaretle
+                        visitedTransactions.Add(tx.TransactionId);
+
+                        // Miktar ne olursa olsun, algoritmanın ilerlemesi için yığına ekle
+                        stack.Push(tx.ToAddress);
+
+                        // Berke'nin UI'ına gidecek filtrelenmiş veriyi listeye ekle
+                        if (tx.Amount >= minAmount)
                         {
-                            stack.Push(tx.ToAddress);
+                            logs.Add($"{currentAddress} -> {tx.ToAddress} ({tx.Amount} BTC)");
                         }
                     }
                 }
             }
+
+            logs.Add("> DFS analizi tamamlandı.");
+            return logs; // Listeyi arayüze gönder
         }
     }
 }
