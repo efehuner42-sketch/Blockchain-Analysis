@@ -17,7 +17,7 @@ namespace BlockchainCore
                 Wallets[address] = new WalletNode(address);
             }
         }
-        //Dinamik Cüzdan Silme Metodu
+        // Dinamik Cüzdan Silme Metodu
         public void RemoveWallet(string address)
         {
             if (Wallets.ContainsKey(address))
