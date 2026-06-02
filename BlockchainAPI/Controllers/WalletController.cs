@@ -12,15 +12,6 @@ namespace BlockchainAPI.Controllers
         // Tüm API isteklerinde aynı graf verisini kullanmak için statik olarak tanımlıyoruz.
         private static readonly BlockchainGraph _graph;
 
-        // Test amaçlı bilinen cüzdan adresleri (HashTable iterasyonu yoksa erişim sağlamak için)
-        private static readonly string[] KnownAddresses = new string[]
-        {
-            "Cuzdan_Efe",
-            "Cuzdan_Murat",
-            "Cuzdan_Fusun",
-            "Cuzdan_Borsa_Binance"
-        };
-
         static WalletController()
         {
             // API ilk ayağa kalktığında test verilerini otomatik yüklüyoruz.
@@ -34,7 +25,8 @@ namespace BlockchainAPI.Controllers
             var nodesList = new List<object>();
             var edgesList = new List<object>();
 
-            foreach (var address in KnownAddresses)
+            // ARTIK DİNAMİK: Hardcoded listeyi çöpe attık. Sistemdeki tüm cüzdan isimlerini (Keys) geziyoruz.
+            foreach (var address in _graph.Wallets.Keys)
             {
                 if (_graph.Wallets.ContainsKey(address))
                 {
@@ -44,6 +36,7 @@ namespace BlockchainAPI.Controllers
                     if (address == "Cuzdan_Murat") initialReceived = 50.0m;
                     if (address == "Cuzdan_Fusun") initialReceived = 30.0m;
                     if (address == "Cuzdan_Borsa_Binance") initialReceived = 200.0m;
+                    // Sisteme sonradan eklenen dinamik cüzdanlar yukarıdaki şartlara girmeyeceği için otomatik olarak 0.0m bakiye ile başlar.
 
                     decimal currentBalance = walletNode.CalculateBalance(initialReceived);
 
@@ -158,6 +151,32 @@ namespace BlockchainAPI.Controllers
                 verified = true,
                 timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             });
+        }
+
+        // POST: api/wallet/ekle/{walletId}
+        [HttpPost("ekle/{walletId}")]
+        public IActionResult AddWallet(string walletId)
+        {
+            if (_graph.Wallets.ContainsKey(walletId))
+            {
+                return BadRequest(new { message = "Bu cüzdan zaten sistemde kayıtlı." });
+            }
+
+            _graph.AddWallet(walletId);
+            return Ok(new { message = $"{walletId} başarıyla eklendi." });
+        }
+
+        // DELETE: api/wallet/sil/{walletId}
+        [HttpDelete("sil/{walletId}")]
+        public IActionResult DeleteWallet(string walletId)
+        {
+            if (!_graph.Wallets.ContainsKey(walletId))
+            {
+                return NotFound(new { message = "Silinecek cüzdan bulunamadı." });
+            }
+
+            _graph.RemoveWallet(walletId);
+            return Ok(new { message = $"{walletId} başarıyla silindi." });
         }
     }
 }
