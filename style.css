@@ -1,0 +1,214 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: #09090b;
+    color: #fafafa;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sol Panel */
+.sidebar {
+    width: 300px;
+    background-color: #09090b;
+    border-right: 1px solid #27272a;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    z-index: 10;
+}
+
+h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #fafafa;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+h3 {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #a1a1aa;
+    margin-bottom: 8px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-size: 0.8rem;
+    color: #a1a1aa;
+}
+
+/* Input ve butonlar */
+input, select, button {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #27272a;
+    background-color: #09090b;
+    color: #fafafa;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+    border-color: #52525b;
+}
+
+button {
+    background-color: #fafafa;
+    color: #09090b;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e4e4e7;
+}
+
+#btn-dfs {
+    background-color: #18181b;
+    color: #fafafa;
+    border: 1px solid #27272a;
+}
+
+#btn-dfs:hover {
+    background-color: #27272a;
+}
+
+.info-box {
+    margin-top: auto;
+    background-color: #18181b;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #27272a;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #d4d4d8;
+}
+
+.main-content {
+    flex-grow: 1;
+    position: relative;
+    background-color: #09090b;
+    background-image: radial-gradient(#27272a 1px, transparent 0);
+    background-size: 30px 30px;
+}
+
+#cy {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.graph-controls {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 20;
+}
+
+.graph-controls button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background-color: #18181b;
+    color: #fafafa;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: all 0.2s ease;
+}
+
+.graph-controls button:hover {
+    background-color: #27272a;
+    border-color: #52525b;
+    transform: translateY(-2px);
+}
+
+/* Sağ Panel */
+.merkle-panel {
+    width: 320px;
+    background-color: #09090b;
+    border-left: 1px solid #27272a;
+    padding: 24px;
+    z-index: 10;
+}
+
+.section-desc {
+    font-size: 0.85rem;
+    color: #a1a1aa;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.placeholder-text {
+    color: #52525b;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.merkle-node {
+    background: #09090b;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    text-align: center;
+    border: 1px solid #27272a;
+    color: #a1a1aa;
+}
+
+.merkle-root {
+    border-color: #52525b;
+    color: #fafafa;
+}
+
+/* --- YENİ EKLENEN SİSTEM TERMİNALİ TASARIMI --- */
+.ui-terminal {
+    background-color: #000000;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+    height: 180px;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ui-terminal .log-info { color: #a1a1aa; }
+.ui-terminal .log-success { color: #10b981; }
+.ui-terminal .log-warning { color: #f59e0b; }
+.ui-terminal .log-error { color: #ef4444; }
