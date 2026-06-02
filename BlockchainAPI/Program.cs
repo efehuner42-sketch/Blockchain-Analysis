@@ -12,6 +12,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
 
 // ---> İŞTE EKSİK OLAN SWAGGER SERVİSLERİ BURADA <---
 builder.Services.AddEndpointsApiExplorer();

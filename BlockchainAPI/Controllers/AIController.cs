@@ -13,13 +13,12 @@ namespace BlockchainAPI.Controllers
     {
         private readonly HttpClient _httpClient;
 
-        public AIController()
+        // Dependency Injection ile IHttpClientFactory kullanıyoruz (Socket Exhaustion'ı önlemek için)
+        public AIController(IHttpClientFactory httpClientFactory)
         {
             // Docker ağında Python servisimizin adı 'ai-service' ve portu 8000 olarak ayarlandı
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("http://ai-service:8000/")
-            };
+            _httpClient = httpClientFactory.CreateClient();
+            _httpClient.BaseAddress = new Uri("http://ai-service:8000/");
         }
 
         // GET ve POST rotalarımız karışmasın diye özel bir uç nokta belirliyoruz
@@ -40,15 +39,18 @@ namespace BlockchainAPI.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Python'dan gelen başarılı cevabı (sentetik cüzdan listesini) okuyup Berke'ye iletiyoruz
+                    // Python'dan gelen başarılı cevabı (sentetik cüzdan listesini) okuyup iletiyoruz
                     var jsonResult = await response.Content.ReadAsStringAsync();
-                    return Ok(JsonDocument.Parse(jsonResult));
+
+                    // .RootElement ekleyerek istemciye string değil, gerçek bir JSON nesnesi dönmesini sağlıyoruz
+                    return Ok(JsonDocument.Parse(jsonResult).RootElement);
                 }
 
                 return StatusCode((int)response.StatusCode, new { message = "AI servisinden hata döndü." });
             }
             catch (Exception ex)
             {
+                
                 return StatusCode(500, new { message = $"Bağlantı hatası: Docker içindeki AI servisine ulaşılamadı. Hata: {ex.Message}" });
             }
         }

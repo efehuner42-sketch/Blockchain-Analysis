@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BlockchainCore
@@ -46,8 +46,8 @@ namespace BlockchainCore
 
             // ARAMA ALGORİTMALARI TESTİ
             // Efe'nin parası nerelere dağılmış izleyelim
-            testGraph.BFS_TrackFundFlow("Cuzdan_Efe");
-            testGraph.DFS_DeepAnalysis("Cuzdan_Efe");
+            testGraph.BFS_TrackFundFlow("Cuzdan_Efe", "Cuzdan_Borsa_Binance");
+            testGraph.DFS_DeepAnalysis("Cuzdan_Efe", "Cuzdan_Borsa_Binance");
 
             // MERKLE AĞACI TESTİ
             Console.WriteLine("\n--- Merkle Tree Güvenlik Testi ---");
