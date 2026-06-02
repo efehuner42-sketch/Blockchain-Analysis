@@ -1,10 +1,10 @@
-﻿# 1. Aşama: Uygulamayı Derleme (Build)
+# 1. Aşama: Uygulamayı Derleme (Build)
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Her iki projenin de iskeletini (csproj) kendi klasör isimleriyle içeri al
-COPY BlockchainAPI/BlockchainAPI.csproj BlockchainAPI/
-COPY BlockchainCore/BlockchainCore.csproj BlockchainCore/
+COPY ["BlockchainAPI/BlockchainAPI.csproj", "BlockchainAPI/"]
+COPY ["BlockchainCore/BlockchainCore.csproj", "BlockchainCore/"]
 
 # Bağımlılıkları yükle (Artık köprünün karşı tarafını da görebilecek)
 RUN dotnet restore "BlockchainAPI/BlockchainAPI.csproj"
