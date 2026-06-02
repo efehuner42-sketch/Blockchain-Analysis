@@ -4,8 +4,8 @@ services:
   # Senin C# Core API Servisin
   blockchain-api:
     build:
-      context: ./BlockchainAPI
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: BlockchainAPI/Dockerfile
     container_name: csharp_blockchain_api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
