@@ -17,6 +17,20 @@ namespace BlockchainCore
                 Wallets[address] = new WalletNode(address);
             }
         }
+        // Dinamik Cüzdan Silme Metodu
+        public void RemoveWallet(string address)
+        {
+            if (Wallets.ContainsKey(address))
+            {
+                // NOT: Murat MyHashTable kullanıyor. Keys özelliği yoksa burası hata verebilir.
+                foreach (string key in Wallets.Keys)
+                {
+                    Wallets[key].OutgoingTransactions.RemoveAll(tx => tx.ToAddress == address);
+                }
+
+                Wallets.Remove(address);
+            }
+        }
 
         // 2. İki cüzdan arasına transfer (kenar) ekleme metodu
         public void AddTransaction(string fromAddress, string toAddress, string txId, decimal amount)

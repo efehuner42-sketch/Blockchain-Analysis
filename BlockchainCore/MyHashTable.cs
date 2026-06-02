@@ -1,4 +1,4 @@
-#nullable disable // C#'ın aşırı korumacı "boş (null) olabilir" uyarılarını kapatır
+﻿#nullable disable // C#'ın aşırı korumacı "boş (null) olabilir" uyarılarını kapatır
 
 using System;
 using System.Collections.Generic;
@@ -84,6 +84,38 @@ namespace BlockchainCore
         {
             get { return Get(key); }
             set { Add(key, value); }
+        }
+        // *** YENİ EKLENEN 1: Tüm cüzdan isimlerini (Key) liste olarak döndürür ***
+        public List<string> Keys
+        {
+            get
+            {
+                List<string> keysList = new List<string>();
+                foreach (var bucket in _buckets)
+                {
+                    foreach (var node in bucket)
+                    {
+                        keysList.Add(node.Key);
+                    }
+                }
+                return keysList;
+            }
+        }
+
+        // *** YENİ EKLENEN 2: İstenen cüzdanı tablodan tamamen siler ***
+        public void Remove(string key)
+        {
+            int index = GetHash(key);
+            List<HashNode> bucket = _buckets[index];
+
+            for (int i = 0; i < bucket.Count; i++)
+            {
+                if (bucket[i].Key == key)
+                {
+                    bucket.RemoveAt(i);
+                    return; // Cüzdanı bulup sildikten sonra aramayı bitir
+                }
+            }
         }
     }
 }
