@@ -6,15 +6,13 @@ using BlockchainCore;
 namespace BlockchainAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // Bu attribute, rotayı otomatik olarak 'api/wallet' yapar.
+    [Route("api/[controller]")]
     public class WalletController : ControllerBase
     {
-        // Tüm API isteklerinde aynı graf verisini kullanmak için statik olarak tanımlıyoruz.
         private static readonly BlockchainGraph _graph;
 
         static WalletController()
         {
-            // API ilk ayağa kalktığında test verilerini otomatik yüklüyoruz.
             _graph = TestDataGenerator.GenerateTestData();
         }
 
@@ -25,7 +23,6 @@ namespace BlockchainAPI.Controllers
             var nodesList = new List<object>();
             var edgesList = new List<object>();
 
-            // ARTIK DİNAMİK: Hardcoded listeyi çöpe attık. Sistemdeki tüm cüzdan isimlerini (Keys) geziyoruz.
             foreach (var address in _graph.Wallets.Keys)
             {
                 if (_graph.Wallets.ContainsKey(address))
@@ -36,7 +33,6 @@ namespace BlockchainAPI.Controllers
                     if (address == "Cuzdan_Murat") initialReceived = 50.0m;
                     if (address == "Cuzdan_Fusun") initialReceived = 30.0m;
                     if (address == "Cuzdan_Borsa_Binance") initialReceived = 200.0m;
-                    // Sisteme sonradan eklenen dinamik cüzdanlar yukarıdaki şartlara girmeyeceği için otomatik olarak 0.0m bakiye ile başlar.
 
                     decimal currentBalance = walletNode.CalculateBalance(initialReceived);
 
@@ -44,8 +40,6 @@ namespace BlockchainAPI.Controllers
                         ? "Binance Borsa"
                         : walletNode.WalletAddress.Replace("Cuzdan_", "") + " Cüzdanı";
 
-                    // Cytoscape kütüphanesinin zorunlu kıldığı 'data' sarmalayıcısı eklendi
-                    // Bakiye doğrudan ekranda görünecek şekilde label içine gömüldü
                     nodesList.Add(new
                     {
                         data = new
@@ -80,52 +74,56 @@ namespace BlockchainAPI.Controllers
             });
         }
 
-        // GET: api/wallet/bfs/{walletId}
-        [HttpGet("bfs/{walletId}")]
-        public IActionResult RunBfs(string walletId)
+        // GET: api/wallet/bfs/{walletId}/{targetId}
+        [HttpGet("bfs/{walletId}/{targetId}")]
+        public IActionResult RunBfs(string walletId, string targetId)
         {
-            if (!_graph.Wallets.ContainsKey(walletId))
+            if (!_graph.Wallets.ContainsKey(walletId) || !_graph.Wallets.ContainsKey(targetId))
             {
-                return NotFound(new { message = "Cüzdan bulunamadı." });
+                return NotFound(new { message = "Başlangıç veya Hedef cüzdan bulunamadı." });
             }
 
-            // BlockchainGraph sınıfından rotayı alıyoruz. (Berke'nin animasyon yapabilmesi için)
-            List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId);
+            List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId, targetId);
 
-            // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
+            if (traversalPath.Count == 0)
+            {
+                return Ok(new { message = $"{walletId} cüzdanından {targetId} cüzdanına herhangi bir fon akışı bulunamadı.", path = traversalPath });
+            }
+
             return Ok(new
             {
-                message = $"BFS Algoritması {walletId} için başarıyla çalıştırıldı. Fon akış izleme logları backend konsoluna yazdırıldı.",
+                message = $"BFS Algoritması çalıştı. {walletId} -> {targetId} rotası bulundu.",
                 path = traversalPath
             });
         }
 
-        // GET: api/wallet/dfs/{walletId}
-        [HttpGet("dfs/{walletId}")]
-        public IActionResult RunDfs(string walletId)
+        // GET: api/wallet/dfs/{walletId}/{targetId}
+        [HttpGet("dfs/{walletId}/{targetId}")]
+        public IActionResult RunDfs(string walletId, string targetId)
         {
-            if (!_graph.Wallets.ContainsKey(walletId))
+            if (!_graph.Wallets.ContainsKey(walletId) || !_graph.Wallets.ContainsKey(targetId))
             {
-                return NotFound(new { message = "Cüzdan bulunamadı." });
+                return NotFound(new { message = "Başlangıç veya Hedef cüzdan bulunamadı." });
             }
 
-            // BlockchainGraph sınıfından derin analiz rotasını alıyoruz.
-            List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId);
+            List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId, targetId);
 
-            // Analiz sonucunu ve ROTAYI (path) frontend'e dönüyoruz
+            if (traversalPath.Count == 0)
+            {
+                return Ok(new { message = $"{walletId} cüzdanından {targetId} cüzdanına derinlemesine bir bağlantı bulunamadı.", path = traversalPath });
+            }
+
             return Ok(new
             {
-                message = $"DFS Derin Analiz Algoritması {walletId} için tetiklendi. Detaylar backend konsolunda listeleniyor.",
+                message = $"DFS Algoritması çalıştı. {walletId} -> {targetId} rotası bulundu.",
                 path = traversalPath
             });
         }
 
         // GET: api/wallet/merkle/{txId}
-        // Arayüzde bir transfer çizgisine tıkladığında Merkle bütünlük kanıtını hesaplayan fonksiyon
         [HttpGet("merkle/{txId}")]
         public IActionResult GetMerkleProof(string txId)
         {
-            // Blok içindeki tüm işlem listesi
             List<string> txList = new List<string>
             {
                 "TX_001_EfeMurat",
@@ -142,8 +140,6 @@ namespace BlockchainAPI.Controllers
             MerkleTree tree = new MerkleTree();
             tree.BuildTree(txList);
 
-            // İlerleyen adımlarda ağacın ara düğüm hash'lerini de dinamik eşleştirmek üzere 
-            // şimdilik Root değerini ve seçili tx bilgisini güvenli şekilde dönüyoruz
             return Ok(new
             {
                 root = tree.MerkleRoot,
