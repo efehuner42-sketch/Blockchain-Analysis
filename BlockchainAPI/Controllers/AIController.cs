@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using BlockchainCore;
 
 namespace BlockchainAPI.Controllers
 {
@@ -13,36 +15,61 @@ namespace BlockchainAPI.Controllers
     {
         private readonly HttpClient _httpClient;
 
-        // Dependency Injection ile IHttpClientFactory kullanıyoruz (Socket Exhaustion'ı önlemek için)
         public AIController(IHttpClientFactory httpClientFactory)
         {
-            // Docker ağında Python servisimizin adı 'ai-service' ve portu 8000 olarak ayarlandı
             _httpClient = httpClientFactory.CreateClient();
             _httpClient.BaseAddress = new Uri("http://ai-service:8000/");
         }
 
-        // GET ve POST rotalarımız karışmasın diye özel bir uç nokta belirliyoruz
         [HttpPost("sentetik-veri-uret")]
         public async Task<IActionResult> GenerateData([FromBody] AIDataRequest request)
         {
             try
             {
-                // C#'taki nesnemizi JSON formatına (Python'un anlayacağı dile) çeviriyoruz
                 var jsonContent = new StringContent(
                     JsonSerializer.Serialize(request),
                     Encoding.UTF8,
                     "application/json"
                 );
 
-                // Python AI servisimize POST isteğini yolluyoruz
                 HttpResponseMessage response = await _httpClient.PostAsync("api/ai/generate-synthetic-data", jsonContent);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Python'dan gelen başarılı cevabı (sentetik cüzdan listesini) okuyup iletiyoruz
                     var jsonResult = await response.Content.ReadAsStringAsync();
 
-                    // .RootElement ekleyerek istemciye string değil, gerçek bir JSON nesnesi dönmesini sağlıyoruz
+                    // --- BİZİM EKLEDİĞİMİZ AKTİF SENKRONİZASYON MANTIĞI ---
+                    // Python'dan gelen yanıtı C# sınıf yapısına çözümlüyoruz
+                    var aiResponse = JsonSerializer.Deserialize<PythonAIResponse>(jsonResult);
+
+                    if (aiResponse != null && aiResponse.status == "success")
+                    {
+                        // Hafızada tertemiz, yepyeni bir graf nesnesi başlatıyoruz
+                        var newGraph = new BlockchainGraph();
+
+                        // 1. Yapay zekanın ürettiği tüm cüzdanları C# grafına ekle
+                        foreach (var walletAddress in aiResponse.generated_wallets)
+                        {
+                            newGraph.AddWallet(walletAddress);
+                        }
+
+                        // 2. Yapay zekanın ürettiği tüm transferleri (kenarları) C# grafına ekle
+                        foreach (var tx in aiResponse.generated_transactions)
+                        {
+                            newGraph.AddTransaction(
+                                tx.sender_address, 
+                                tx.receiver_address, 
+                                tx.tx_id, 
+                                tx.amount
+                            );
+                        }
+
+                        // KRİTİK DOKUNUŞ: WalletController'ın kullandığı küresel grafı 
+                        // yapay zekanın canlı verileriyle güncelliyoruz!
+                        WalletController._graph = newGraph;
+                    }
+                    // -----------------------------------------------------
+
                     return Ok(JsonDocument.Parse(jsonResult).RootElement);
                 }
 
@@ -50,16 +77,32 @@ namespace BlockchainAPI.Controllers
             }
             catch (Exception ex)
             {
-                
                 return StatusCode(500, new { message = $"Bağlantı hatası: Docker içindeki AI servisine ulaşılamadı. Hata: {ex.Message}" });
             }
         }
     }
 
-    // Python'daki FastAPI'nin beklediği veri yapısı (DataRequest modeli)
+    // --- C# İÇİN JSON DESERİALİZE MODELLERİ ---
     public class AIDataRequest
     {
         public int wallet_count { get; set; }
         public int transaction_count { get; set; }
+    }
+
+    public class PythonAIResponse
+    {
+        public string status { get; set; }
+        public string message { get; set; }
+        public List<string> generated_wallets { get; set; }
+        public List<AITransactionDetail> generated_transactions { get; set; }
+    }
+
+    public class AITransactionDetail
+    {
+        public string tx_id { get; set; }
+        public string sender_address { get; set; }
+        public string receiver_address { get; set; }
+        public decimal amount { get; set; }
+        public long timestamp { get; set; }
     }
 }

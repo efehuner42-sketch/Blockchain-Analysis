@@ -68,8 +68,7 @@ const cyStyles = [
       "target-arrow-color": "#fafafa",
     },
   },
-  
-  // --- BFS SARI PARLAMA ANİMASYON STİLİ (BURAYA ALDIK) ---
+  // --- BFS SARI PARLAMA ANİMASYON STİLİ ---
   {
     selector: ".bfs-highlighted",
     style: {
@@ -80,8 +79,7 @@ const cyStyles = [
       "border-width": "3px",
     }
   },
-
-  // --- DFS KIRMIZI PARLAMA ANİMASYON STİLİ (BURAYA ALDIK) ---
+  // --- DFS KIRMIZI PARLAMA ANİMASYON STİLİ ---
   {
     selector: ".dfs-highlighted",
     style: {
@@ -202,6 +200,7 @@ function setupGraphEvents() {
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/wallet/merkle/${edge.id()}`);
+      
       if (response.ok) {
         const merkleData = await response.json();
         merkleViewer.innerHTML = `
@@ -213,9 +212,12 @@ function setupGraphEvents() {
                 <strong>Seçili TX Yaprağı</strong><br>${merkleData.selectedTx.substring(0,20)}...
             </div>
         `;
+      } else {
+        // Backend'den 404 vs gelirse zorla hataya düşür ki panel sonsuza kadar beklemesin!
+        throw new Error(`HTTP Hatası: ${response.status}`);
       }
     } catch (error) {
-      merkleViewer.innerHTML = `<div class="placeholder-text" style="color: #ef4444;">Merkle doğrulaması simüle edilemedi.</div>`;
+      merkleViewer.innerHTML = `<div class="placeholder-text" style="color: #ef4444;">Merkle doğrulaması başarısız.<br>İşlem bulunamadı veya sahte!</div>`;
     }
   });
 }
@@ -239,7 +241,7 @@ async function initSystem() {
   }
 }
 
-// --- HEDEFLİ BFS/DFS ALGORİTMA ANİMASYON MANTIĞI ---
+// --- RAPORA UYGUN DÜĞÜM (NODE) VE KENAR (EDGE) ANİMASYONU ---
 async function animatePath(pathArray, algoType) {
   const algoClass = algoType === "bfs" ? "bfs-highlighted" : "dfs-highlighted";
   const algoLabel = algoType.toUpperCase();
@@ -247,49 +249,57 @@ async function animatePath(pathArray, algoType) {
   writeToTerminal(`--- ${algoLabel} Takip Operasyonu Başlatıldı ---`, "info");
   cyInstance.elements().removeClass("bfs-highlighted").removeClass("dfs-highlighted");
 
-  let visitedNodes = [];
-
   for (let i = 0; i < pathArray.length; i++) {
     const currentWalletId = pathArray[i];
     const node = cyInstance.getElementById(currentWalletId);
+    
+    // Düğümü (Vertex/Node) parlat
+    if (node.length > 0) node.addClass(algoClass);
 
-    if (i === 0) {
-      if (node.length > 0) node.addClass(algoClass);
-      visitedNodes.push(currentWalletId);
-      continue;
-    }
-
-    let edgesToHighlight = [];
-    for (let j = 0; j < visitedNodes.length; j++) {
-      const prevNodeId = visitedNodes[j];
-      const prevNode = cyInstance.getElementById(prevNodeId);
-
+    if (i > 0) {
+      const prevWalletId = pathArray[i - 1];
+      const prevNode = cyInstance.getElementById(prevWalletId);
+      
       if (prevNode.length > 0 && node.length > 0) {
-        const edgesBetween = prevNode.edgesTo(node);
-        edgesBetween.forEach((edge) => {
-          if (edge.style("display") !== "none") {
-            edgesToHighlight.push({ edgeObj: edge, prev: prevNodeId, amt: edge.data("amount") });
+        // İki düğüm arasındaki BÜTÜN kenarları (transferleri) al
+        const allEdges = prevNode.edgesTo(node);
+        
+        if (allEdges.length > 0) {
+          // --- MAKSİMUM KAPASİTE FİLTRESİ ---
+          let maxEdge = allEdges[0];
+          let maxAmount = parseFloat(maxEdge.data("amount")) || 0;
+
+          for (let j = 1; j < allEdges.length; j++) {
+            let currentAmount = parseFloat(allEdges[j].data("amount")) || 0;
+            if (currentAmount > maxAmount) {
+              maxAmount = currentAmount;
+              maxEdge = allEdges[j];
+            }
           }
-        });
+
+          // Sadece en kalın/büyük transfer okunu parlat!
+          maxEdge.addClass(algoClass);
+          
+          const txTime = maxEdge.data("time") || "Bilinmiyor";
+          writeToTerminal(`[FON AKIŞI] ${prevWalletId.substring(0,8)}... -> ${currentWalletId.substring(0,8)}... (${maxAmount} BTC) [Saat: ${txTime}]`, "success");
+        }
       }
     }
-
-    if (node.length > 0) node.addClass(algoClass);
-    edgesToHighlight.forEach((item) => {
-      item.edgeObj.addClass(algoClass);
-      writeToTerminal(`[FON AKIŞI] ${item.prev.substring(0,10)}... -> ${currentWalletId.substring(0,10)}... (${item.amt} BTC)`, "success");
-    });
-
-    visitedNodes.push(currentWalletId);
-    await new Promise((resolve) => setTimeout(resolve, 700)); // Berke'nin efsane animasyon süresi
+    
+    // Katmanlı/Derinlemesine geçiş hissini jüriye yansıtmak için bekleme süresi
+    await new Promise((resolve) => setTimeout(resolve, 500)); 
   }
-  writeToTerminal(`> ${algoLabel} analizi tamamlandı. Hedefe ulaşıldı.`, "info");
+  
+  writeToTerminal(`> ${algoLabel} analizi tamamlandı. Ana transfer (Edge) bağlantıları kilitlendi.`, "info");
 }
 
-// --- YENİ AKILLI ALGORİTMA TETİKLEYİCİSİ ---
+// --- %100 BACKEND ALGORİTMASINA BAĞLI ÇALIŞAN TETİKLEYİCİ ---
 async function runAlgorithm(type) {
   const startId = document.getElementById("wallet-start").value;
   const targetId = document.getElementById("wallet-target").value;
+  
+  // Arayüzdeki minimum transfer inputundan güncel bütçe değerini çekiyoruz
+  const minAmount = parseFloat(document.getElementById("min-transfer").value) || 0;
 
   if (!startId || !targetId) return alert("Lütfen hem Başlangıç hem de Hedef cüzdanı seçin!");
   if (startId === targetId) return alert("Başlangıç ve Hedef cüzdan adresi aynı olamaz!");
@@ -297,52 +307,23 @@ async function runAlgorithm(type) {
   document.getElementById("ui-terminal").innerHTML = "";
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/wallet/${type}/${startId}/${targetId}`);
+    // URL'in sonuna query parameter olarak minAmount değerini ekliyoruz
+    const response = await fetch(`${API_BASE_URL}/api/wallet/${type}/${startId}/${targetId}?minAmount=${minAmount}`);
     
     if (response.ok) {
-      // 1. DURUM: Backend cüzdanı tanıdı ve rotayı kendi verdi (Örn: Efe -> Murat)
       const resData = await response.json();
       const path = resData.path || resData.Path;
 
       if (path && path.length > 0) {
         await animatePath(path, type);
       } else {
-        writeToTerminal(`[BİLGİ] İki cüzdan arasında akış bulunamadı.`, "warning");
+        writeToTerminal(`[BİLGİ] C# Algoritması: Belirtilen bütçe limiti (${minAmount} BTC) dahilinde bir fon akış izi bulamadı.`, "warning");
       }
-    } 
-    else if (response.status === 404) {
-      // 2. DURUM (KRİTİK): Backend 404 verdi! (Yani Yapay Zeka cüzdanı seçtin)
-      writeToTerminal(`[BİLGİ] Backend hafızası yetersiz. Rota tarayıcıda (Frontend) hesaplanıyor...`, "warning");
-      fallbackFrontendAlgorithm(startId, targetId, type);
+    } else {
+      writeToTerminal(`[HATA] Backend sunucusu hata kodu döndürdü: ${response.status}`, "error");
     }
   } catch (error) {
-    writeToTerminal(`[HATA] Sunucu yanıt vermedi. Frontend devralıyor...`, "error");
-    fallbackFrontendAlgorithm(startId, targetId, type);
-  }
-}
-
-// --- FRONTEND ROTA HESAPLAYICI (BACKEND ÇÖKTÜĞÜNDE VEYA TANIMADIĞINDA ÇALIŞIR) ---
-async function fallbackFrontendAlgorithm(startId, targetId, type) {
-  const startNode = cyInstance.getElementById(startId);
-  const targetNode = cyInstance.getElementById(targetId);
-
-  // Cytoscape'in kendi içindeki devasa yol bulma algoritmasını (Dijkstra) tetikliyoruz
-  const dijkstra = cyInstance.elements().dijkstra({ root: startNode, directed: true });
-  const pathToTarget = dijkstra.pathTo(targetNode);
-
-  // Eğer hedef cüzdana ulaşan geçerli bir yol varsa (Uzunluğu 1'den büyükse)
-  if (pathToTarget && pathToTarget.length > 1) {
-    const pathArray = [];
-    
-    // Bize hem cüzdanları hem transfer çizgilerini karmaşık dönüyor, sadece cüzdan ID'lerini ayıklıyoruz
-    pathToTarget.forEach(ele => {
-      if (ele.isNode()) pathArray.push(ele.id());
-    });
-
-    // Kendi bulduğumuz rotayı efsane dalga animasyonuna gönderiyoruz!
-    await animatePath(pathArray, type);
-  } else {
-    writeToTerminal(`[BİLGİ] Seçilen yapay zeka cüzdanları arasında hiçbir transfer/fon yolu bulunamadı.`, "error");
+    writeToTerminal("[SİSTEM HATASI] Backend sunucusuna erişilemedi.", "error");
   }
 }
 
@@ -364,20 +345,17 @@ async function generateSyntheticData() {
       const aiData = await response.json();
       writeToTerminal(`[AI BAŞARILI] ${aiData.message}`, "success");
 
-      // Ham Python AI datasını Cytoscape Formatına Dönüştürme (Dinamik Hesaplama)
       const formattedNodes = [];
       const formattedEdges = [];
 
-      // Cüzdan bakiyelerini transfer hareketlerine göre simüle edelim (Gerçekçilik için)
       const derivedBalances = {};
-      aiData.generated_wallets.forEach(addr => derivedBalances[addr] = 100.0); // Taban bakiye
+      aiData.generated_wallets.forEach(addr => derivedBalances[addr] = 100.0); 
 
       aiData.generated_transactions.forEach(tx => {
         derivedBalances[tx.sender_address] = (derivedBalances[tx.sender_address] || 100) - tx.amount;
         derivedBalances[tx.receiver_address] = (derivedBalances[tx.receiver_address] || 100) + tx.amount;
       });
 
-      // Node Array oluşturma
       aiData.generated_wallets.forEach(addr => {
         const finalBalance = Math.max(5, roundTo(derivedBalances[addr], 4));
         formattedNodes.push({
@@ -387,9 +365,7 @@ async function generateSyntheticData() {
         });
       });
 
-      // Edge Array oluşturma
       aiData.generated_transactions.forEach(tx => {
-        // Unix timestamp'i okunabilir saate çevir
         const dateObj = new Date(tx.timestamp * 1000);
         const formattedTime = dateObj.toTimeString().split(' ')[0];
 
@@ -404,7 +380,6 @@ async function generateSyntheticData() {
 
       const finalGraphData = { nodes: formattedNodes, edges: formattedEdges };
 
-      // Arayüz Seçim kutularını ve Haritayı Baştan Çizdir
       populateSelectBoxes(finalGraphData.nodes);
       renderGraph(finalGraphData);
       writeToTerminal("> Yapay zeka sentetik haritası başarıyla render edildi.", "info");

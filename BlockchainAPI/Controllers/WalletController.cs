@@ -9,12 +9,7 @@ namespace BlockchainAPI.Controllers
     [Route("api/[controller]")]
     public class WalletController : ControllerBase
     {
-        private static readonly BlockchainGraph _graph;
-
-        static WalletController()
-        {
-            _graph = TestDataGenerator.GenerateTestData();
-        }
+        public static BlockchainGraph _graph = TestDataGenerator.GenerateTestData();
 
         // GET: api/wallet
         [HttpGet]
@@ -22,6 +17,21 @@ namespace BlockchainAPI.Controllers
         {
             var nodesList = new List<object>();
             var edgesList = new List<object>();
+
+            // --- GELEN PARALARI (INCOMING) HESAPLAYAN KİLİT KISIM ---
+            var incomingAmounts = new Dictionary<string, decimal>();
+            foreach (var address in _graph.Wallets.Keys)
+            {
+                var wNode = (WalletNode)_graph.Wallets[address];
+                foreach (var tx in wNode.OutgoingTransactions)
+                {
+                    if (!incomingAmounts.ContainsKey(tx.ToAddress))
+                        incomingAmounts[tx.ToAddress] = 0.0m;
+                    
+                    incomingAmounts[tx.ToAddress] += tx.Amount;
+                }
+            }
+            // --------------------------------------------------------
 
             foreach (var address in _graph.Wallets.Keys)
             {
@@ -34,11 +44,31 @@ namespace BlockchainAPI.Controllers
                     if (address == "Cuzdan_Fusun") initialReceived = 30.0m;
                     if (address == "Cuzdan_Borsa_Binance") initialReceived = 200.0m;
 
-                    decimal currentBalance = walletNode.CalculateBalance(initialReceived);
+                    // Bakiye = Başlangıç + Gelenler - Gidenler
+                    decimal totalIncoming = incomingAmounts.ContainsKey(address) ? incomingAmounts[address] : 0.0m;
+                    decimal totalOutgoing = 0.0m;
+                    foreach (var tx in walletNode.OutgoingTransactions)
+                    {
+                        totalOutgoing += tx.Amount;
+                    }
 
-                    string cuzdanIsmi = walletNode.WalletAddress == "Cuzdan_Borsa_Binance"
-                        ? "Binance Borsa"
-                        : walletNode.WalletAddress.Replace("Cuzdan_", "") + " Cüzdanı";
+                    decimal currentBalance = initialReceived + totalIncoming - totalOutgoing;
+
+                    // Cüzdan isimlerini ekrana daha şık yazdırmak için formatlıyoruz
+                    string cuzdanIsmi = "";
+                    if (walletNode.WalletAddress == "Cuzdan_Borsa_Binance")
+                    {
+                        cuzdanIsmi = "Binance Borsa";
+                    }
+                    else if (walletNode.WalletAddress.StartsWith("0x"))
+                    {
+                        // Yapay zeka cüzdanıysa: "0x1a2b3c..." yerine "AI_1A2B" gibi havalı bir isim yap
+                        cuzdanIsmi = "AI_" + walletNode.WalletAddress.Substring(2, 4).ToUpper();
+                    }
+                    else
+                    {
+                        cuzdanIsmi = walletNode.WalletAddress.Replace("Cuzdan_", "") + " Cüzdanı";
+                    }
 
                     nodesList.Add(new
                     {
@@ -67,78 +97,68 @@ namespace BlockchainAPI.Controllers
                 }
             }
 
-            return Ok(new
-            {
-                nodes = nodesList,
-                edges = edgesList
-            });
+            return Ok(new { nodes = nodesList, edges = edgesList });
         }
 
-        // GET: api/wallet/bfs/{walletId}/{targetId}
+        // GET: api/wallet/bfs/{walletId}/{targetId}?minAmount=50
         [HttpGet("bfs/{walletId}/{targetId}")]
-        public IActionResult RunBfs(string walletId, string targetId)
+        public IActionResult RunBfs(string walletId, string targetId, [FromQuery] decimal minAmount = 0)
         {
             if (!_graph.Wallets.ContainsKey(walletId) || !_graph.Wallets.ContainsKey(targetId))
             {
                 return NotFound(new { message = "Başlangıç veya Hedef cüzdan bulunamadı." });
             }
 
-            List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId, targetId);
-
-            if (traversalPath.Count == 0)
-            {
-                return Ok(new { message = $"{walletId} cüzdanından {targetId} cüzdanına herhangi bir fon akışı bulunamadı.", path = traversalPath });
-            }
-
-            return Ok(new
-            {
-                message = $"BFS Algoritması çalıştı. {walletId} -> {targetId} rotası bulundu.",
-                path = traversalPath
-            });
+            List<string> traversalPath = _graph.BFS_TrackFundFlow(walletId, targetId, minAmount);
+            return Ok(new { path = traversalPath });
         }
 
-        // GET: api/wallet/dfs/{walletId}/{targetId}
+        // GET: api/wallet/dfs/{walletId}/{targetId}?minAmount=50
         [HttpGet("dfs/{walletId}/{targetId}")]
-        public IActionResult RunDfs(string walletId, string targetId)
+        public IActionResult RunDfs(string walletId, string targetId, [FromQuery] decimal minAmount = 0)
         {
             if (!_graph.Wallets.ContainsKey(walletId) || !_graph.Wallets.ContainsKey(targetId))
             {
                 return NotFound(new { message = "Başlangıç veya Hedef cüzdan bulunamadı." });
             }
 
-            List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId, targetId);
-
-            if (traversalPath.Count == 0)
-            {
-                return Ok(new { message = $"{walletId} cüzdanından {targetId} cüzdanına derinlemesine bir bağlantı bulunamadı.", path = traversalPath });
-            }
-
-            return Ok(new
-            {
-                message = $"DFS Algoritması çalıştı. {walletId} -> {targetId} rotası bulundu.",
-                path = traversalPath
-            });
+            List<string> traversalPath = _graph.DFS_DeepAnalysis(walletId, targetId, minAmount);
+            return Ok(new { path = traversalPath });
         }
 
         // GET: api/wallet/merkle/{txId}
         [HttpGet("merkle/{txId}")]
         public IActionResult GetMerkleProof(string txId)
         {
-            List<string> txList = new List<string>
-            {
-                "TX_001_EfeMurat",
-                "TX_002_EfeFusun",
-                "TX_003_MuratBorsa",
-                "TX_004_FusunBorsa"
-            };
+            List<string> allTxIds = new List<string>();
+            bool txExists = false;
 
-            if (!txList.Contains(txId))
+            // Dinamik Veri Toplama: Sistemdeki (AI dahil) tüm transferleri bul
+            foreach (var address in _graph.Wallets.Keys)
             {
-                return NotFound(new { message = "İşlem kimliği (TX) bulunamadı." });
+                var walletNode = (WalletNode)_graph.Wallets[address];
+                foreach (var tx in walletNode.OutgoingTransactions)
+                {
+                    allTxIds.Add(tx.TransactionId);
+                    if (tx.TransactionId == txId) txExists = true;
+                }
             }
 
+            // Seçilen işlem grafikte yoksa hata dön
+            if (!txExists)
+            {
+                return NotFound(new { message = "İşlem kimliği (TX) bulunamadı veya sahte işlem!" });
+            }
+
+            // Merkle Ağacı kuralı: Yaprak (İşlem) sayısı tek ise, son işlemi kopyalayarak çift yap
+            if (allTxIds.Count % 2 != 0 && allTxIds.Count > 0)
+            {
+                allTxIds.Add(allTxIds[allTxIds.Count - 1]);
+            }
+
+            // Ağacı İnşa Et ve Kökü Bul
             MerkleTree tree = new MerkleTree();
-            tree.BuildTree(txList);
+            tree.BuildTree(allTxIds);
 
             return Ok(new
             {
