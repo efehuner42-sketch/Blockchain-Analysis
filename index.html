@@ -14,12 +14,29 @@
             <h2>Kontrol Paneli</h2>
             
             <div class="control-group">
-                <label for="wallet-search">Cüzdan Seçimi (BFS/DFS İçin)</label>
-                <select id="wallet-search">
-                    <option value="">Bir cüzdan seçin...</option>
+                <label for="wallet-start">Başlangıç Cüzdanı</label>
+                <select id="wallet-start">
+                    <option value="">Bir başlangıç cüzdanı seçin...</option>
                 </select>   
+
+                <label for="wallet-target">Hedef Cüzdan (Target)</label>
+                <select id="wallet-target">
+                    <option value="">Bir hedef cüzdan seçin...</option>
+                </select>   
+                
                 <button id="btn-bfs">BFS ile Akış İzle</button>
                 <button id="btn-dfs">DFS ile Derinlemesine Analiz</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Yapay Zeka Entegrasyonu</h3>
+                <label for="ai-wallet-count">Üretilecek Cüzdan Sayısı</label>
+                <input type="number" id="ai-wallet-count" value="10" min="2">
+
+                <label for="ai-tx-count">Simüle Edilecek İşlem Sayısı</label>
+                <input type="number" id="ai-tx-count" value="50" min="1">
+
+                <button id="btn-ai-generate" style="background-color: #10b981; color: #000;">Sentetik Veri Üret</button>
             </div>
 
             <div class="control-group">
