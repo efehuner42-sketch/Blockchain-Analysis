@@ -23,18 +23,19 @@ body {
     width: 300px;
     background-color: #09090b;
     border-right: 1px solid #27272a;
-    padding: 24px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     z-index: 10;
+    overflow-y: auto;
 }
 
 h2 {
     font-size: 1.1rem;
     font-weight: 500;
     color: #fafafa;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     letter-spacing: -0.5px;
 }
 
@@ -42,23 +43,25 @@ h3 {
     font-size: 0.9rem;
     font-weight: 400;
     color: #a1a1aa;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    border-bottom: 1px solid #18181b;
+    padding-bottom: 14px;
 }
 
 label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #a1a1aa;
 }
 
 /* Input ve butonlar */
 input, select, button {
-    padding: 10px 12px;
+    padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid #27272a;
     background-color: #09090b;
@@ -95,9 +98,8 @@ button:hover {
 }
 
 .info-box {
-    margin-top: auto;
     background-color: #18181b;
-    padding: 16px;
+    padding: 14px;
     border-radius: 8px;
     border: 1px solid #27272a;
     font-size: 0.85rem;
@@ -193,12 +195,12 @@ button:hover {
     color: #fafafa;
 }
 
-/* --- YENİ EKLENEN SİSTEM TERMİNALİ TASARIMI --- */
+/* Sistem Terminali */
 .ui-terminal {
     background-color: #000000;
     border: 1px solid #27272a;
     border-radius: 6px;
-    height: 180px;
+    height: 150px;
     padding: 10px;
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.75rem;
@@ -212,3 +214,23 @@ button:hover {
 .ui-terminal .log-success { color: #10b981; }
 .ui-terminal .log-warning { color: #f59e0b; }
 .ui-terminal .log-error { color: #ef4444; }
+
+/* --- BFS Sarı Parlama Animasyon Sınıfı --- */
+.bfs-highlighted {
+    background-color: #f59e0b !important;
+    line-color: #f59e0b !important;
+    target-arrow-color: #f59e0b !important;
+    border-color: #d97706 !important;
+    border-width: 3px !important;
+    transition: all 0.3s ease;
+}
+
+/* --- DFS Kırmızı Parlama Animasyon Sınıfı --- */
+.dfs-highlighted {
+    background-color: #ef4444 !important;
+    line-color: #ef4444 !important;
+    target-arrow-color: #ef4444 !important;
+    border-color: #b91c1c !important;
+    border-width: 3px !important;
+    transition: all 0.3s ease;
+}
