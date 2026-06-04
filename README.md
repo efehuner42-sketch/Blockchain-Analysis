@@ -6,6 +6,10 @@ Bu proje, blokzincir sistemlerinde bulunan işlem verilerinin sadeleştirilmiş 
 
 Temel hedef; işlem ağını yönlü graf (Directed Graph) veri yapısı ile temsil etmek, Merkle Ağacı kullanarak işlem bütünlüğünü doğrulamak ve BFS/DFS algoritmaları yardımıyla belirli bir cüzdanın fon akışını takip etmektir.
 
+## Proje Tanıtım Videosu
+
+[![Proje Tanıtım Videosu](https://img.youtube.com/vi/AFItoiWmCKw/maxresdefault.jpg)](https://www.youtube.com/watch?v=AFItoiWmCKw)
+
 ## Kullanılan Teknolojiler
 
 - **Backend (Çekirdek Veri Yapıları ve API):** C#, ASP.NET Core
@@ -45,14 +49,16 @@ Konteynerler başarıyla başlatıldıktan sonra aşağıdaki adreslere erişile
 
 ## Ekip Üyeleri ve Görev Dağılımı
 
-- **Efe Hüner:** DevOps, Versiyon Kontrol (GitHub) ve Sistem Entegrasyonu (Docker & API)
-- **Füsun Gün:** Çekirdek Veri Yapıları Geliştiricisi (Yönlü Graf, Merkle Ağacı, Hash Table)
-- **Murat Aybey Nurçin:** Çekirdek Algoritma Geliştiricisi (BFS/DFS, Bakiye Hesaplama ve Big-O Analizleri)
-- **Mehmet Berke Terzi:** Frontend ve Görselleştirme Sorumlusu (Node-Link Diyagramı Arayüzü)
-- **Emir Berat Zorlu:** AI Mikroservisi, Sentetik Veri Üretimi ve Dokümantasyon Sorumlusu
+- **Efe Hüner-032490011:** DevOps, Versiyon Kontrol (GitHub) ve Sistem Entegrasyonu (Docker & API)
+- **Füsun Gün-032490014:** Çekirdek Veri Yapıları Geliştiricisi (Yönlü Graf, Merkle Ağacı, Hash Table)
+- **Murat Aybey Nurçin-032490017:** Çekirdek Algoritma Geliştiricisi (BFS/DFS, Bakiye Hesaplama ve Big-O Analizleri)
+- **Mehmet Berke Terzi-032490018:** Frontend ve Görselleştirme Sorumlusu (Node-Link Diyagramı Arayüzü)
+- **Emir Berat Zorlu-032490019:** AI Mikroservisi, Sentetik Veri Üretimi ve Dokümantasyon Sorumlusu
 
 ## Geliştirme Süreci ve Kurallar
 
 - Bu proje GitHub üzerinden yürütülmektedir. Ekip büyüklüğü göz önünde bulundurularak **main** dalına doğrudan kod gönderilmesi yasaktır.
 - Her yeni geliştirme için ayrı bir dal (branch) oluşturulmalı ve değişiklikler **Pull Request (PR)** mekanizması kullanılarak ana dala entegre edilmelidir.
 - Tüm kod değişiklikleri, ilgili görev veya geliştirme kapsamında anlamlı commit mesajları ile kayıt altına alınmalıdır.
+
+
