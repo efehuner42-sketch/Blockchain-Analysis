@@ -38,7 +38,6 @@ namespace BlockchainAPI.Controllers
                 {
                     var jsonResult = await response.Content.ReadAsStringAsync();
 
-                    // --- BİZİM EKLEDİĞİMİZ AKTİF SENKRONİZASYON MANTIĞI ---
                     // Python'dan gelen yanıtı C# sınıf yapısına çözümlüyoruz
                     var aiResponse = JsonSerializer.Deserialize<PythonAIResponse>(jsonResult);
 
@@ -64,11 +63,8 @@ namespace BlockchainAPI.Controllers
                             );
                         }
 
-                        // KRİTİK DOKUNUŞ: WalletController'ın kullandığı küresel grafı 
-                        // yapay zekanın canlı verileriyle güncelliyoruz!
                         WalletController._graph = newGraph;
                     }
-                    // -----------------------------------------------------
 
                     return Ok(JsonDocument.Parse(jsonResult).RootElement);
                 }
