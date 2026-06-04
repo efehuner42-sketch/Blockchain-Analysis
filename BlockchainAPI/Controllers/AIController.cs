@@ -49,13 +49,13 @@ namespace BlockchainAPI.Controllers
                         // 1. Yapay zekanın ürettiği tüm cüzdanları C# grafına ekle
                         foreach (var walletAddress in aiResponse.generated_wallets)
                         {
-                            newGraph.AddWallet(walletAddress);
+                            newGraph.FusunGunAddWallet(walletAddress);
                         }
 
                         // 2. Yapay zekanın ürettiği tüm transferleri (kenarları) C# grafına ekle
                         foreach (var tx in aiResponse.generated_transactions)
                         {
-                            newGraph.AddTransaction(
+                            newGraph.FusunGunAddTransaction(
                                 tx.sender_address, 
                                 tx.receiver_address, 
                                 tx.tx_id, 
