@@ -22,7 +22,7 @@ namespace BlockchainCore
         private readonly List<HashNode>[] _buckets;
         private readonly int _size;
 
-        public MyHashTable(int size = 100)
+        public MyHashTable(int size)
         {
             _size = size;
             _buckets = new List<HashNode>[_size];
@@ -32,7 +32,7 @@ namespace BlockchainCore
             }
         }
 
-        private int GetHash(string key)
+        private int MuratAybeyGetHash(string key)
         {
             int hashValue = 0;
             foreach (char c in key)
@@ -42,9 +42,9 @@ namespace BlockchainCore
             return hashValue % _size;
         }
 
-        public void Add(string key, WalletNode value)
+        public void MuratAybeyAdd(string key, WalletNode value)
         {
-            int index = GetHash(key);
+            int index = MuratAybeyGetHash(key);
             List<HashNode> bucket = _buckets[index];
 
             foreach (var node in bucket)
@@ -60,7 +60,7 @@ namespace BlockchainCore
 
         public WalletNode Get(string key)
         {
-            int index = GetHash(key);
+            int index = MuratAybeyGetHash(key);
             List<HashNode> bucket = _buckets[index];
 
             foreach (var node in bucket)
@@ -73,7 +73,7 @@ namespace BlockchainCore
             return null;
         }
 
-        public bool ContainsKey(string key)
+        public bool MuratAybeyContainsKey(string key)
         {
             return Get(key) != null;
         }
@@ -82,9 +82,9 @@ namespace BlockchainCore
         public WalletNode this[string key]
         {
             get { return Get(key); }
-            set { Add(key, value); }
+            set { MuratAybeyAdd(key, value); }
         }
-        //Tüm cüzdan isimlerini (Key) liste olarak döndürür 
+        //Tüm cüzdan isimlerini (Key) liste olarak döndürür
         public List<string> Keys
         {
             get
@@ -102,9 +102,9 @@ namespace BlockchainCore
         }
 
         //İstenen cüzdanı tablodan tamamen siler
-        public void Remove(string key)
+        public void MuratAybeyRemove(string key)
         {
-            int index = GetHash(key);
+            int index = MuratAybeyGetHash(key);
             List<HashNode> bucket = _buckets[index];
 
             for (int i = 0; i < bucket.Count; i++)

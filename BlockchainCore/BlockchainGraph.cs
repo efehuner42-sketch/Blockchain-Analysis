@@ -7,38 +7,38 @@ namespace BlockchainCore
     {
         public MyHashTable Wallets = new MyHashTable(100);
 
-        public void AddWallet(string address)
+        public void FusunGunAddWallet(string address)
         {
-            if (!Wallets.ContainsKey(address))
+            if (!Wallets.MuratAybeyContainsKey(address))
                 Wallets[address] = new WalletNode(address);
         }
 
-        public void RemoveWallet(string address)
+        public void FusunGunRemoveWallet(string address)
         {
-            if (Wallets.ContainsKey(address))
+            if (Wallets.MuratAybeyContainsKey(address))
             {
                 foreach (string key in Wallets.Keys)
                 {
                     Wallets[key].OutgoingTransactions.RemoveAll(tx => tx.ToAddress == address);
                 }
-                Wallets.Remove(address);
+                Wallets.MuratAybeyRemove(address);
             }
         }
 
-        public void AddTransaction(string fromAddress, string toAddress, string txId, decimal amount)
+        public void FusunGunAddTransaction(string fromAddress, string toAddress, string txId, decimal amount)
         {
-            AddWallet(fromAddress);
-            AddWallet(toAddress);
+            FusunGunAddWallet(fromAddress);
+            FusunGunAddWallet(toAddress);
 
             TransactionEdge newTx = new TransactionEdge(txId, toAddress, amount);
             Wallets[fromAddress].OutgoingTransactions.Add(newTx);
         }
 
         // --- BFS: EN KISA YOL TAKİBİ (MIN AMOUNT FİLTRELİ) ---
-        public List<string> BFS_TrackFundFlow(string startAddress, string targetAddress, decimal minAmount = 0)
+        public List<string> MuratAybeyBFS_TrackFundFlow(string startAddress, string targetAddress, decimal minAmount = 0)
         {
             List<string> path = new List<string>();
-            if (!Wallets.ContainsKey(startAddress) || !Wallets.ContainsKey(targetAddress)) return path;
+            if (!Wallets.MuratAybeyContainsKey(startAddress) || !Wallets.MuratAybeyContainsKey(targetAddress)) return path;
 
             Queue<string> queue = new Queue<string>();
             HashSet<string> visited = new HashSet<string>();
@@ -87,10 +87,10 @@ namespace BlockchainCore
         }
 
         // --- DFS: DERİNLEMESİNE ANALİZ (MIN AMOUNT FİLTRELİ) ---
-        public List<string> DFS_DeepAnalysis(string startAddress, string targetAddress, decimal minAmount = 0)
+        public List<string> MuratAybeyDFS_DeepAnalysis(string startAddress, string targetAddress, decimal minAmount = 0)
         {
             List<string> finalPath = new List<string>();
-            if (!Wallets.ContainsKey(startAddress) || !Wallets.ContainsKey(targetAddress)) return finalPath;
+            if (!Wallets.MuratAybeyContainsKey(startAddress) || !Wallets.MuratAybeyContainsKey(targetAddress)) return finalPath;
 
             Stack<List<string>> stack = new Stack<List<string>>();
             HashSet<string> visited = new HashSet<string>();

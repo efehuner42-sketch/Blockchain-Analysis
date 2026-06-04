@@ -9,10 +9,9 @@ namespace BlockchainCore
 {
     public class MerkleTree
     {
-        // Uyarıyı (CS8618) çözmek için başlangıçta boş metin (string.Empty) atadık
         public string MerkleRoot { get; private set; } = string.Empty;
 
-        public void BuildTree(List<string> transactions)
+        public void FusunGunBuildTree(List<string> transactions)
         {
             if (transactions == null || transactions.Count == 0)
             {
@@ -31,7 +30,7 @@ namespace BlockchainCore
                     string left = currentLayer[i];
                     string right = (i + 1 < currentLayer.Count) ? currentLayer[i + 1] : left;
 
-                    string combinedHash = Hash(left + right);
+                    string combinedHash = FusunGunHash(left + right);
                     nextLayer.Add(combinedHash);
                 }
                 currentLayer = nextLayer;
@@ -40,7 +39,7 @@ namespace BlockchainCore
             MerkleRoot = currentLayer[0];
         }
 
-        private string Hash(string rawData)
+        private string FusunGunHash(string rawData)
         {
             using (SHA256 sha256Hash = SHA256.Create())
             {
