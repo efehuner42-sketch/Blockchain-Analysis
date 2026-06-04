@@ -62,7 +62,6 @@ namespace BlockchainAPI.Controllers
                     }
                     else if (walletNode.WalletAddress.StartsWith("0x"))
                     {
-                        // Yapay zeka cüzdanıysa: "0x1a2b3c..." yerine "AI_1A2B" gibi havalı bir isim yap
                         cuzdanIsmi = "AI_" + walletNode.WalletAddress.Substring(2, 4).ToUpper();
                     }
                     else
