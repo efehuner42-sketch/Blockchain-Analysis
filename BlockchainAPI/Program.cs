@@ -14,7 +14,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
-// ---> İŞTE EKSİK OLAN SWAGGER SERVİSLERİ BURADA <---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -24,7 +23,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// 2. CORS Politikasını Uygulamaya Tanıt (Burası çok önemli, MapControllers'dan önce olmalı)
+// 2. CORS Politikasını Uygulamaya Tanıt
 app.UseCors("AllowAll");
 
 app.MapControllers();
