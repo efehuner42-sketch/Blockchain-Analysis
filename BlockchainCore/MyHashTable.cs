@@ -78,14 +78,13 @@ namespace BlockchainCore
             return Get(key) != null;
         }
 
-        // *** İŞTE BURASI EKSİKTİ (CS0021 Hatasının Çözümü) ***
         // Cüzdanlara köşeli parantez [] ile erişebilmek için (Indexer)
         public WalletNode this[string key]
         {
             get { return Get(key); }
             set { Add(key, value); }
         }
-        // *** YENİ EKLENEN 1: Tüm cüzdan isimlerini (Key) liste olarak döndürür ***
+        //Tüm cüzdan isimlerini (Key) liste olarak döndürür 
         public List<string> Keys
         {
             get
@@ -102,7 +101,7 @@ namespace BlockchainCore
             }
         }
 
-        // *** YENİ EKLENEN 2: İstenen cüzdanı tablodan tamamen siler ***
+        //İstenen cüzdanı tablodan tamamen siler
         public void Remove(string key)
         {
             int index = GetHash(key);
